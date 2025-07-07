@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
-import * as UserService from '../services/user.service';
+import * as UserService from '../services/user.service.js';
 
 /**
  * @desc    Update user profile (name)

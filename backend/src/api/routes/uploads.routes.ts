@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { protect } from '../../middleware/auth.middleware';
-import { generateUploadUrl } from '../../controllers/uploads.controller';
+import { protect } from '../../middleware/auth.middleware.js';
+import { generateUploadUrl } from '../../controllers/uploads.controller.js';
 
 const router = Router();
 

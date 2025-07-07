@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 import { DocType } from '@prisma/client';
 
 export const createDocumentRecord = (userId: string, filename: string, fileKey: string, type: DocType) => {

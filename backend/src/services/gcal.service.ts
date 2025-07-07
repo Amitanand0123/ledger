@@ -1,7 +1,7 @@
 // backend/src/services/gcal.service.ts
 
 import { google } from 'googleapis';
-import config from '../config';
+import config from '../config/index.js';
 
 const oauth2Client = new google.auth.OAuth2(
     config.google.clientId,

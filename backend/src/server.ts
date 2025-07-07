@@ -1,9 +1,9 @@
-import app from './app';
-import config from './config';
-import { logger } from './utils/logger';
+import app from './app.js';
+import config from './config/index.js';
+import { logger } from './utils/logger.js';
 import { createServer } from 'http';
-import { initializeSocket } from './socket';
-import { initializeEmailService } from './services/email.service';
+import { initializeSocket } from './socket.js';
+import { initializeEmailService } from './services/email.service.js';
 
 const PORT = config.port || 5000;
 

@@ -1,6 +1,6 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 import { Prisma, TeamRole } from '@prisma/client';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.js';
 
 /**
  * Creates a new team and automatically makes the creator the OWNER.

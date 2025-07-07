@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
-import * as JobService from '../services/job.service';
+import * as JobService from '../services/job.service.js';
 
 /**
  * @desc    Get all job applications for the logged-in user or a team, with filtering

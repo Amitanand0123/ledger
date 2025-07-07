@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { protect } from '../../middleware/auth.middleware';
+import { protect } from '../../middleware/auth.middleware.js';
 import {
     getPlatforms,
     createPlatform,
-} from '../../controllers/platform.controller';
+} from '../../controllers/platform.controller.js';
 
 const router = Router();
 

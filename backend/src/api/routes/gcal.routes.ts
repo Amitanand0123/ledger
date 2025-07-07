@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { protect } from '../../middleware/auth.middleware';
+import { protect } from '../../middleware/auth.middleware.js';
 import {
     getGoogleAuthUrl,
     oauth2Callback,
     scheduleInterview,
-} from '../../controllers/gcal.controller';
+} from '../../controllers/gcal.controller.js';
 
 const router = Router();
 

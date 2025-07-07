@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import config from '../config';
-import { logger } from '../utils/logger';
+import config from '../config/index.js';
+import { logger } from '../utils/logger.js';
 
 if (!config.gemini.apiKey) {
     throw new Error('GEMINI_API_KEY is not configured.');

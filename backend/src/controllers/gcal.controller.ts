@@ -2,10 +2,10 @@
 
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
-import * as GCalService from '../services/gcal.service';
-import { prisma } from '../config/db';
-import * as JobService from '../services/job.service';
-import config from '../config';
+import * as GCalService from '../services/gcal.service.js';
+import { prisma } from '../config/db.js';
+import * as JobService from '../services/job.service.js';
+import config from '../config/index.js';
 
 /**
  * @desc    Get the Google OAuth2 consent screen URL

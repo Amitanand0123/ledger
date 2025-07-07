@@ -1,8 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
-import config from './config';
-import { logger } from './utils/logger';
+import config from './config/index.js';
+import { logger } from './utils/logger.js';
 export function initializeSocket(httpServer: HttpServer): Server {
     if (!config.jwtSecret) {
         throw new Error('JWT_SECRET is not configured. Please check environment variables.');

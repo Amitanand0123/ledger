@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import aiRoutes from './routes/ai.routes';
-import authRoutes from './routes/auth.routes';
-import customFieldsRoutes from './routes/custom-fields.routes';
-import gcalRoutes from './routes/gcal.routes';
-import jobsRoutes from './routes/jobs.routes';
-import platformRoutes from './routes/platform.routes';
-import uploadsRoutes from './routes/uploads.routes';
-import userRoutes from './routes/user.routes';
-import documentRoutes from  './routes/document.routes'
+import aiRoutes from './routes/ai.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import customFieldsRoutes from './routes/custom-fields.routes.js';
+import gcalRoutes from './routes/gcal.routes.js';
+import jobsRoutes from './routes/jobs.routes.js';
+import platformRoutes from './routes/platform.routes.js';
+import uploadsRoutes from './routes/uploads.routes.js';
+import userRoutes from './routes/user.routes.js';
+import documentRoutes from  './routes/document.routes.js'
 
 const router = Router();
 

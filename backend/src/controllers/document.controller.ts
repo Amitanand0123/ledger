@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import { Response } from 'express';
-import * as DocumentService from '../services/document.service';
+import * as DocumentService from '../services/document.service.js';
 import { DocType } from '@prisma/client';
 
 /**

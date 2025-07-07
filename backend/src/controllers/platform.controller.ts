@@ -2,7 +2,7 @@
 
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
-import * as PlatformService from '../services/platform.service';
+import * as PlatformService from '../services/platform.service.js';
 
 /**
  * @desc    Get or search for job platforms

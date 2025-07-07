@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/db';
-import config from '../config';
+import { prisma } from '../config/db.js';
+import config from '../config/index.js';
 
 /**
  * Middleware to protect routes that require authentication.

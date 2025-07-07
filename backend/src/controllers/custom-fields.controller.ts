@@ -2,7 +2,7 @@
 
 import asyncHandler from 'express-async-handler';
 import {  Response } from 'express';
-import * as CustomFieldService from '../services/custom-fields.service';
+import * as CustomFieldService from '../services/custom-fields.service.js';
 import { FieldType } from '@prisma/client';
 
 /**

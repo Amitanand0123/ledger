@@ -1,10 +1,10 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 import { Prisma } from '@prisma/client';
-import * as TeamService from './team.service';
-import app from '../app';
-import { parseSalary } from '../utils/salaryParser';
-import { sendEmail } from './email.service';
-import { createPlatform } from './platform.service';
+import * as TeamService from './team.service.js';
+import app from '../app.js';
+import { parseSalary } from '../utils/salaryParser.js';
+import { sendEmail } from './email.service.js';
+import { createPlatform } from './platform.service.js';
 
 const onJobDataChange = (userId: string, teamId?: string | null) => {
     const io = app.get('io');

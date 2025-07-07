@@ -2,9 +2,9 @@ import express, { Express, Request, Response, RequestHandler } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { errorHandler } from './middleware/error.middleware';
-import apiRoutes from './api';
-import config from './config';
+import { errorHandler } from './middleware/error.middleware.js';
+import apiRoutes from './api/index.js';
+import config from './config/index.js';
 
 const app: Express = express();
 

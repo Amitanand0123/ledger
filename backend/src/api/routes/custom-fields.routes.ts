@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { protect } from '../../middleware/auth.middleware';
+import { protect } from '../../middleware/auth.middleware.js';
 import {
     getCustomFields,
     createCustomField,
     deleteCustomField,
-} from '../../controllers/custom-fields.controller';
+} from '../../controllers/custom-fields.controller.js';
 
 const router = Router();
 

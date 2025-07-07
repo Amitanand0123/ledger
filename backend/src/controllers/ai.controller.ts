@@ -1,7 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { Response } from 'express';
-import * as AIService from '../services/ai.service';
-import { prisma } from '../config/db';
+import * as AIService from '../services/ai.service.js';
+import { prisma } from '../config/db.js';
 
 /**
  * @desc    Get AI-powered analysis for a specific job description

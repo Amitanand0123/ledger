@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 import * as bcrypt from 'bcryptjs';
 
 // Update a user's profile information (currently just name)

@@ -2,8 +2,8 @@ import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/db';
-import config from '../config';
+import { prisma } from '../config/db.js';
+import config from '../config/index.js';
 
 // Helper function to generate JWT
 const generateToken = (id: string) => {

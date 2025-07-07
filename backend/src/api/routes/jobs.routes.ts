@@ -6,8 +6,8 @@ import {
     updateJobApplication,
     deleteJobApplication,
     deleteBulkJobs,
-} from '../../controllers/jobs.controller';
-import { protect } from '../../middleware/auth.middleware';
+} from '../../controllers/jobs.controller.js';
+import { protect } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 router.use(protect);

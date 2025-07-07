@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
-import { getUploadPresignedUrl } from '../services/s3.service';
+import { getUploadPresignedUrl } from '../services/s3.service.js';
 
 /**
  * @desc    Generate a secure, presigned URL for direct S3 file upload

@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 import { FieldType } from '@prisma/client';
 
 export const getFieldsForUser = (userId: string) => {

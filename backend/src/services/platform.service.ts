@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../config/db.js';
 
 export const findPlatforms = (searchTerm?: string) => {
     return prisma.jobPlatform.findMany({
