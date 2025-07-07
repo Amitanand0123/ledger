@@ -1,4 +1,3 @@
-// backend/src/services/email.service.ts
 import nodemailer from 'nodemailer';
 
 let transporter: nodemailer.Transporter;
