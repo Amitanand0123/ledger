@@ -1,0 +1,10 @@
+# backend/.dockerignore
+
+# Ignore node_modules, as they will be installed inside the container
+node_modules
+
+# Ignore local environment files, the .env from the parent will be used by docker-compose
+.env
+
+# Ignore build output
+dist

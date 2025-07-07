@@ -1,0 +1,38 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    name: Validate Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install All Dependencies
+        # This script is in your root package.json
+        run: npm run install:all
+
+      - name: Run Linting
+        # This script runs linting for both frontend and backend
+        run: npm run test:all
+
+      - name: Check TypeScript Types
+        # Your backend has a dedicated type-check script.
+        # The frontend's types are checked during its build step.
+        run: npm run type-check --workspace=backend
+      
+      - name: Run Production Build Check
+        # This script attempts to build all workspaces. 
+        # It's a great final check to catch errors before merging.
+        run: npm run build:check

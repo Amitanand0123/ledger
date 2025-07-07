@@ -1,0 +1,158 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  name              String?
+  password          String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  gcalRefreshToken  String?
+  jobApplications   JobApplication[]
+  customFields      CustomField[]
+  teams             TeamMembership[]
+  accounts          Account[]
+  documents         Document[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  filename  String
+  fileKey   String   @unique // S3 Key
+  type      DocType
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  resumes       JobApplication[] @relation("ResumeApplications")
+  coverLetters  JobApplication[] @relation("CoverLetterApplications")
+
+  @@index([userId])
+}
+
+model JobApplication {
+  id                   String        @id @default(cuid())
+  company              String
+  position             String
+  location             String
+  salary               String?
+  salaryMin            Int?
+  salaryMax            Int?
+  url                  String?
+  description          String?
+  applicationDate      DateTime      @default(now())
+  status               String
+  order                Int           @default(0)
+  aiAnalysisCount      Int           @default(0)
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId               String?
+  team                 Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  platformId           String?
+  platform             JobPlatform?  @relation(fields: [platformId], references: [id], onDelete: SetNull)
+  resumeId             String?
+  resume               Document?     @relation("ResumeApplications", fields: [resumeId], references: [id], onDelete: SetNull)
+  coverLetterId        String?
+  coverLetter          Document?     @relation("CoverLetterApplications", fields: [coverLetterId], references: [id], onDelete: SetNull)
+  interviewDate        DateTime?
+  statusHistory        StatusHistory[]
+  customFieldValues    CustomFieldValue[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  
+  @@index([userId])
+  @@index([teamId])
+}
+
+model StatusHistory {
+  id          String         @id @default(cuid())
+  jobId       String
+  job         JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status      String
+  changedAt   DateTime       @default(now())
+  @@index([jobId])
+}
+
+model JobPlatform {
+  id    String           @id @default(cuid())
+  name  String           @unique
+  jobs  JobApplication[]
+}
+
+model CustomField {
+  id      String             @id @default(cuid())
+  name    String
+  type    FieldType
+  userId  String
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  values  CustomFieldValue[]
+  @@unique([userId, name])
+}
+
+model CustomFieldValue {
+  id            String      @id @default(cuid())
+  value         String
+  jobId         String
+  job           JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  customFieldId String
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  @@unique([jobId, customFieldId])
+}
+
+model Team {
+  id      String           @id @default(cuid())
+  name    String
+  members TeamMembership[]
+  jobs    JobApplication[]
+}
+
+model TeamMembership {
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId String
+  team   Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  role   TeamRole
+  @@id([userId, teamId])
+}
+
+enum DocType {
+  RESUME
+  COVER_LETTER
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+}
+
+enum TeamRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
