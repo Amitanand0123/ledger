@@ -23,7 +23,7 @@ export default function RootLayout({
       <head>
         <title>Ledger</title>
         <meta name="description" content="The ultimate tool to manage and track your job applications with ease." />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/job.jpg" />
       </head>
       <body className={inter.className}>
         {/*
