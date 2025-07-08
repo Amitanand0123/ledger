@@ -129,8 +129,8 @@ export function FilterPanel({ selectedIds, clearSelection }: FilterPanelProps) {
             </div>
             
             <div className="flex items-center gap-2 w-full md:w-auto">
-                <Input id="min-salary-input" type="number" placeholder="Min Salary ($)" className="w-1/2 md:w-[120px]" defaultValue={filters.salaryMin} onChange={(e) => debouncedSalary({ min: e.target.value, max: filters.salaryMax })} min="0" />
-                <Input id="max-salary-input" type="number" placeholder="Max Salary ($)" className="w-1/2 md:w-[120px]" defaultValue={filters.salaryMax} onChange={(e) => debouncedSalary({ min: filters.salaryMin, max: e.target.value })} min="0" />
+                <Input id="min-salary-input" type="number" placeholder="Min Salary" className="w-1/2 md:w-[120px]" defaultValue={filters.salaryMin} onChange={(e) => debouncedSalary({ min: e.target.value, max: filters.salaryMax })} min="0" />
+                <Input id="max-salary-input" type="number" placeholder="Max Salary" className="w-1/2 md:w-[120px]" defaultValue={filters.salaryMax} onChange={(e) => debouncedSalary({ min: filters.salaryMin, max: e.target.value })} min="0" />
             </div>
             
             <Button variant="ghost" onClick={handleClearFilters} className="w-full md:w-auto text-muted-foreground">

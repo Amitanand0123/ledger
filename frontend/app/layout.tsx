@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>JobTracker Pro</title>
+        <title>Ledger</title>
         <meta name="description" content="The ultimate tool to manage and track your job applications with ease." />
         <link rel="icon" href="/favicon.ico" />
       </head>

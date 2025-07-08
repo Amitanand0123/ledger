@@ -1,6 +1,6 @@
-# JobTracker Pro 🚀
+# Ledger 🚀
 
-![JobTracker Pro Banner](https://via.placeholder.com/1200x630/8DBCC7/000000?text=JobTracker+Pro)
+![Ledger Banner](https://via.placeholder.com/1200x630/8DBCC7/000000?text=Ledger)
 
 **The ultimate tool to manage and track your job applications with ease. Stop juggling spreadsheets and start landing interviews.**
 

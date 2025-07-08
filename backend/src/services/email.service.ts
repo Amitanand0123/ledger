@@ -34,7 +34,7 @@ export const sendEmail = async (options: EmailOptions) => {
     }
     try {
         const info = await transporter.sendMail({
-            from: '"JobTracker Pro" <noreply@jobtracker.pro>',
+            from: '"Ledger" <noreply@ledger.pro>',
             ...options,
         });
         console.log('Email sent successfully: %s', info.messageId);

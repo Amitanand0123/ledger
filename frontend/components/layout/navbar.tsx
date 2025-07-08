@@ -40,7 +40,7 @@ export function Navbar() {
       {/* FIXED: Add logo and name for desktop view */}
       <Link href="/" className="hidden lg:flex items-center gap-2 font-semibold text-foreground">
         <Package2 className="h-6 w-6 text-primary" />
-        <span className="">JobTracker Pro</span>
+        <span className="">Ledger</span>
       </Link>
 
       <Sheet>
