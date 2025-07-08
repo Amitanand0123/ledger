@@ -34,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- Rate Limiting ---
 // Apply to all API routes to prevent abuse
+app.set('trust proxy', 1);
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per window
