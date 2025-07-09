@@ -10,8 +10,7 @@ This full-stack monorepo application provides a beautiful, intuitive dashboard t
 
 ### ✨ Live Demo
 
--   **Frontend Application (Vercel):** [**https://jobtracker-pro-monorepo.vercel.app**](https://your-frontend-url.vercel.app)
--   **Backend API (Render):** [**https://jobtracker-pro-backend.onrender.com/health**](https://your-backend-url.onrender.com/health)
+-   **Application (Vercel):** [**https://ledger-app-gamma.vercel.app/**](https://ledger-app-gamma.vercel.app/)
 
 > **Note:** The backend is hosted on Render's free tier and may "spin down" if inactive. The first request might take 20-30 seconds to wake up the server.
 
