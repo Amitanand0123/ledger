@@ -151,5 +151,5 @@ Backend API will be available at http://localhost:5000
 Frontend will be available at http://localhost:3021
 👨‍💻 Author
 Amit anand
-GitHub: @AmitAnand121
+GitHub: @Amitanand0123
 LinkedIn: Amit Anand
