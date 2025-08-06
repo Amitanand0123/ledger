@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../../middleware/auth.middleware';
+import { protect } from '../../middleware/auth.middleware.js';
 import { invokeAiAgent, rebuildResume } from '../../controllers/agent.controller.js';
 
 const router = Router();

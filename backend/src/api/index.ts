@@ -8,7 +8,7 @@ import platformRoutes from './routes/platform.routes.js';
 import uploadsRoutes from './routes/uploads.routes.js';
 import userRoutes from './routes/user.routes.js';
 import documentRoutes from  './routes/document.routes.js'
-import agentRoutes from './routes/agent.routes';
+import agentRoutes from './routes/agent.routes.js';
 
 const router = Router();
 
