@@ -1,6 +1,6 @@
 # --- PyTorch CPU-Only Installation ---
 # This special index URL forces pip to download the smaller, CPU-only versions.
---index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.8.0+cpu
 
 # --- Application Dependencies (Pinned for Reproducible Builds) ---
