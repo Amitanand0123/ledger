@@ -6,7 +6,7 @@ import { parseSalary } from '../utils/salaryParser.js';
 import { sendEmail } from './email.service.js';
 import { createPlatform } from './platform.service.js';
 import { getTextFromS3 } from './s3.service.js';
-import config from '../config';
+import config from '../config/index.js';
 import expressAsyncHandler from 'express-async-handler';
 import { logger } from '@/utils/logger.js';
 
