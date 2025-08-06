@@ -1,22 +1,38 @@
+// backend/src/services/email.service.ts
+
 import nodemailer from 'nodemailer';
+import config from '../config/index.js';
+import { logger } from '../utils/logger.js';
 
 let transporter: nodemailer.Transporter;
 
 export const initializeEmailService = async () => {
+    // Check for required environment variables
+    if (!config.email.user || !config.email.pass || !config.email.host) {
+        logger.warn('Email service environment variables not fully configured. Email sending will be disabled.');
+        return;
+    }
+
     try {
-        const testAccount = await nodemailer.createTestAccount();
+        // Create a transporter using your real email service credentials
         transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            secure: false,
+            host: config.email.host,
+            port: Number(config.email.port),
+            secure: config.email.secure, // true for port 465, false for other ports
             auth: {
-                user: testAccount.user,
-                pass: testAccount.pass,
+                user: config.email.user,
+                pass: config.email.pass,
             },
         });
-        console.log('Email service initialized with Ethereal.');
+
+        // Verify the connection configuration
+        await transporter.verify();
+        logger.info('Email service is configured and ready to send real emails.');
+
     } catch (error) {
-        console.error('Failed to initialize email service:', error);
+        logger.error('Failed to initialize or verify email service:', error);
+        // Set transporter to null to prevent attempts to send mail
+        transporter = null!; 
     }
 };
 
@@ -28,18 +44,19 @@ interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions) => {
+    // If the transporter wasn't initialized correctly, do not attempt to send email.
     if (!transporter) {
-        console.warn('Email service has not been initialized. Skipping email.');
+        logger.warn(`Skipping email to "${options.to}" because the email service is not initialized.`);
         return;
     }
+    
     try {
         const info = await transporter.sendMail({
-            from: '"Ledger" <noreply@ledger.pro>',
+            from: `"Ledger" <${config.email.user}>`, // Use your configured email as the sender
             ...options,
         });
-        console.log('Email sent successfully: %s', info.messageId);
-        console.log('Preview email at: %s', nodemailer.getTestMessageUrl(info));
+        logger.info(`Email sent successfully to "${options.to}". Message ID: ${info.messageId}`);
     } catch (error) {
-        console.error('Error sending email:', error);
+        logger.error(`Error sending email to "${options.to}":`, error);
     }
 };

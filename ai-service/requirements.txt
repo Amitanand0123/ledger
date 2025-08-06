@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+langchain
+langchain-google-genai
+pinecone-client
+langchain-pinecone
+langchain-community # for sentence-transformers
+sentence-transformers
+langgraph
+langchain-huggingface
+
+google-api-python-client==2.110.0

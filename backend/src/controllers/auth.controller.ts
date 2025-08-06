@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
 import config from '../config/index.js';
+import { logger } from '@/utils/logger.js';
 
 // Helper function to generate JWT
 const generateToken = (id: string) => {
@@ -71,8 +72,26 @@ export const handleOAuth = asyncHandler(async (req: Request, res: Response) => {
 
     let user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-        // Create a new user if they don't exist
+    if (user) {
+        // User with this email already exists. Link the new OAuth account to them.
+        logger.info(`Existing user ${email} found. Linking provider ${provider}.`);
+        const accountExists = await prisma.account.findUnique({
+            where: { provider_providerAccountId: { provider, providerAccountId } }
+        });
+        if (!accountExists) {
+            await prisma.account.create({
+                data: {
+                    userId: user.id,
+                    type: 'oauth',
+                    provider,
+                    providerAccountId,
+                }
+            });
+            logger.info(`Provider ${provider} linked successfully for user ${email}.`);
+        }
+    } else {
+        // No user with this email exists. Create a new user and link the account.
+        logger.info(`No user found for ${email}. Creating new user.`);
         user = await prisma.user.create({
             data: {
                 email,
@@ -87,26 +106,11 @@ export const handleOAuth = asyncHandler(async (req: Request, res: Response) => {
                 }
             },
         });
-    } else {
-        // Link account if user exists but provider is new
-        const accountExists = await prisma.account.findUnique({
-            where: { provider_providerAccountId: { provider, providerAccountId } }
-        });
-        if (!accountExists) {
-            await prisma.account.create({
-                data: {
-                    userId: user.id,
-                    type: 'oauth',
-                    provider,
-                    providerAccountId,
-                }
-            });
-        }
+        logger.info(`New user ${email} created via OAuth.`);
     }
     
     res.status(200).json({ _id: user.id, name: user.name, email: user.email, token: generateToken(user.id) });
 });
-
 
 /**
  * @desc    Get current logged-in user's data

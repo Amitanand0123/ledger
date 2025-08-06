@@ -20,6 +20,10 @@ model User {
   teams             TeamMembership[]
   accounts          Account[]
   documents         Document[]
+  webhooks Webhook[]
+  airtableApiKey      String?
+  airtableBaseId      String?
+  airtableTableName   String? @default("Job Applications")
 }
 
 model Account {
@@ -44,6 +48,7 @@ model Document {
   filename  String
   fileKey   String   @unique // S3 Key
   type      DocType
+  latexSource String?  @db.Text
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -63,7 +68,8 @@ model JobApplication {
   salaryMin            Int?
   salaryMax            Int?
   url                  String?
-  description          String?
+  description          String?       @db.Text
+  summary              String?       @db.Text
   applicationDate      DateTime      @default(now())
   status               String
   order                Int           @default(0)
@@ -137,6 +143,31 @@ model TeamMembership {
   team   Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   role   TeamRole
   @@id([userId, teamId])
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String   // e.g., "job.status.changed"
+  targetUrl String   // The Zapier webhook URL
+  createdAt DateTime @default(now())
+  jobs WebhookJob[]
+
+  @@unique([userId, eventType]) // User can only have one webhook per event type
+}
+
+model WebhookJob {
+  id          String   @id @default(cuid())
+  webhookId   String
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  payload     Json
+  status      String   @default("PENDING") // PENDING, FAILED
+  attempts    Int      @default(0)
+  lastAttempt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([status, lastAttempt])
 }
 
 enum DocType {

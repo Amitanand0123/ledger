@@ -1,0 +1,16 @@
+name: Keep Backend Alive
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '*/14 * * * *'
+
+jobs:
+  ping:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send GET request to backend
+        run: curl --fail --silent --show-error --output /dev/null "https://ledger-backend-2hto.onrender.com/health"

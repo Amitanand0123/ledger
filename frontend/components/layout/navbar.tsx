@@ -1,5 +1,16 @@
 'use client'
 
+import Link from "next/link"
+import {
+  CircleUser,
+  Home,
+  Menu,
+  Package2,
+  Settings,
+  BarChart3,
+  LogIn,
+  LogOut
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,12 +21,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { CircleUser, Home, LogIn, Menu, Package2, Settings, BarChart3, LogOut } from "lucide-react"
-import { ThemeToggle } from "./theme-toggle"
 import { signOut, useSession } from "next-auth/react"
-import { AddJobButton } from "../dashboard/add-job-button"
-import Link from "next/link"
 import { toast } from "sonner"
+
+import { AddJobButton } from "../dashboard/add-job-button"
+import { ThemeToggle } from "./theme-toggle"
+import { NavLink } from "./nav-link"
 import { Sidebar } from "./sidebar"
 
 export function Navbar() {
@@ -36,62 +47,67 @@ export function Navbar() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-      {/* FIXED: Add logo and name for desktop view */}
-      <Link href="/" className="hidden lg:flex items-center gap-2 font-semibold text-foreground">
-        <Package2 className="h-6 w-6 text-primary" />
-        <span className="">Ledger</span>
-      </Link>
+    <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+        {/* Logo on the left */}
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 text-lg font-semibold md:text-base"
+        >
+          <Package2 className="h-6 w-6 text-brand-primary" />
+          <span className="sr-only">Ledger</span>
+        </Link>
+        {/* Centered Navigation Links */}
+        <NavLink href="/dashboard">Dashboard</NavLink>
+        <NavLink href="/stats">Statistics</NavLink>
+        <NavLink href="/settings">Settings</NavLink>
+      </nav>
 
+      {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 lg:hidden" aria-label="Toggle navigation menu">
+          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
             <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col p-0">
-          <Sidebar />
+        <SheetContent side="left">
+           {/* The Sidebar component now cleanly provides the mobile navigation */}
+           <Sidebar />
         </SheetContent>
       </Sheet>
 
-      <div className="w-full flex-1" />
-
-      <AddJobButton />
-      <ThemeToggle />
-
-      {isGuest ? (
-        <Button variant="outline" asChild>
-            <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4"/> Login
-            </Link>
-        </Button>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full" aria-label="Toggle user menu">
-              <CircleUser className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{session?.user?.name || 'My Account'}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" /> Settings
-                </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-                <Link href="/stats" className="cursor-pointer">
-                    <BarChart3 className="mr-2 h-4 w-4" /> Statistics
-                </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      {/* Right-side action buttons */}
+      <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+        <AddJobButton />
+        <ThemeToggle />
+        {isGuest ? (
+          <Button variant="outline" asChild>
+              <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4"/> Login
+              </Link>
+          </Button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <CircleUser className="h-5 w-5" />
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{session?.user?.name || 'My Account'}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild><Link href="/settings" className="cursor-pointer">Settings</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/stats" className="cursor-pointer">Statistics</Link></DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:bg-destructive/10">
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
     </header>
   )
 }

@@ -1,27 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
+import ApiError from '../utils/ApiError.js';
 
-/**
- * Global Express error handling middleware.
- * Catches errors from async handlers and standard middleware.
- * Formats the error response into a consistent JSON object.
- * Hides the stack trace in production environments for security.
- */
 export const errorHandler = (
-    err: Error,
+    err: Error | ApiError,
     req: Request,
     res: Response,
     next: NextFunction
 ) => {
-    // Determine the status code. If the response already has a status code (e.g., set by a controller to 400),
-    // use that. Otherwise, default to 500 (Internal Server Error).
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    let statusCode = 500;
+    let message = 'An unexpected internal server error occurred.';
 
-    res.status(statusCode);
+    if (err instanceof ApiError) {
+        statusCode = err.statusCode;
+        message = err.message;
+    } else {
+        // Log the original unexpected error for debugging purposes
+        console.error('UNHANDLED ERROR:', err);
+    }
+    
+    // In development, you might want to see the stack trace
+    const stack = process.env.NODE_ENV === 'production' ? undefined : err.stack;
 
-    // Send back a JSON response with the error details.
-    res.json({
-        message: err.message,
-        // The stack trace is useful for debugging but should not be exposed in production.
-        stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+    res.status(statusCode).json({
+        message,
+        stack, // Will be undefined in production
     });
 };

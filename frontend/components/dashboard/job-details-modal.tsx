@@ -11,6 +11,9 @@ import { useSession } from 'next-auth/react';
 import ReactMarkdown from 'react-markdown';
 import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
+import { MatchAnalysis } from './MatchAnalysis';
+import { AiCoach } from './AiCoach';
+import { SimilarJobs } from "./SimilarJobs";
 
 function StatusHistoryTimeline({ history }: { history: any[] }) {
     if (!history || history.length === 0) {
@@ -112,6 +115,8 @@ export function JobDetailsModal() {
                         </div>
                     )}
 
+                    {session && viewingJob.description && <AiCoach jobId={viewingJob.id} />}
+
                     <div className="space-y-2 rounded-lg border bg-brand-accent-light/30 p-4">
                         <div className="flex justify-between items-center">
                             <h4 className="font-semibold text-foreground">AI-Powered Insights</h4>
@@ -144,6 +149,7 @@ export function JobDetailsModal() {
                              )
                         )}
                     </div>
+                    <SimilarJobs jobId={viewingJob.id} />
                     
                     {viewingJob.description && (
                          <div>

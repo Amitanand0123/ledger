@@ -15,6 +15,12 @@ import { deleteGuestJob, updateGuestJob } from '@/lib/redux/slices/guestJobsSlic
 import { Checkbox } from '../ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from '../ui/truncated-text';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
+import { Loader2 } from 'lucide-react';
+import { UserDocument } from '@/lib/types';
+import { useState } from 'react';
 
 interface JobCardProps {
     job: JobApplication;
@@ -22,6 +28,52 @@ interface JobCardProps {
     colorClass: string;
     isSelected: boolean;
     onSelectionChange: (jobId: string, isSelected: boolean) => void;
+}
+
+function DocumentSelector({ job, type }: { job: JobApplication, type: 'RESUME' | 'COVER_LETTER' }) {
+    const { data: documents, isLoading } = useGetDocumentsQuery(type);
+    const [updateJob, { isLoading: isUpdating }] = useUpdateJobMutation();
+    const [isOpen, setIsOpen] = useState(false);
+
+    const currentDoc = type === 'RESUME' ? job.resume : job.coverLetter;
+
+    const handleSelect = (docId: string) => {
+        const fieldToUpdate = type === 'RESUME' ? 'resumeId' : 'coverLetterId';
+        const newId = docId === 'none' ? null : docId;
+        
+        if ((currentDoc?.id || null) === newId) return;
+
+        toast.promise(updateJob({ id: job.id, [fieldToUpdate]: newId }).unwrap(), {
+            loading: `Updating ${type.toLowerCase()}...`,
+            success: `${type.charAt(0) + type.slice(1).toLowerCase()} updated!`,
+            error: 'Failed to update.'
+        });
+        setIsOpen(false);
+    };
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <div className='flex items-center gap-1 cursor-pointer hover:text-primary'>
+                    <FileText size={14}/>
+                    <TruncatedText text={currentDoc?.filename || 'N/A'} maxLength={15}/>
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="p-2 w-60">
+                <Select onValueChange={handleSelect} defaultValue={currentDoc?.id || 'none'}>
+                    <SelectTrigger disabled={isLoading || isUpdating}>
+                        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : <SelectValue placeholder={`Select ${type.toLowerCase()}`} />}
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {documents?.map(doc => (
+                            <SelectItem key={doc.id} value={doc.id}>{doc.filename}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </PopoverContent>
+        </Popover>
+    );
 }
 
 export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionChange }: JobCardProps) {
@@ -103,8 +155,8 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
                 {renderCell(<TruncatedText text={job.platform?.name} maxLength={15}/>, "hidden md:flex", handleViewDetails)}
                 {renderCell(job.url ? <a href={job.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-1 hover:text-primary"><LinkIcon size={14}/> Link</a> : <span className="text-muted-foreground">N/A</span>, "hidden md:flex")}
                 {renderCell(<TruncatedText text={job.description} maxLength={30}/>, "hidden md:flex hover:text-primary", handleOpenDescriptionModal)}
-                {renderCell(<div className='flex items-center gap-1'><FileText size={14}/><TruncatedText text={job.resume?.filename} maxLength={15}/></div>, "hidden md:flex", handleViewDetails)}
-                {renderCell(<div className='flex items-center gap-1'><FileText size={14}/><TruncatedText text={job.coverLetter?.filename} maxLength={15}/></div>, "hidden md:flex", handleViewDetails)}
+                {renderCell(<DocumentSelector job={job} type="RESUME" />, "hidden md:flex")}
+                {renderCell(<DocumentSelector job={job} type="COVER_LETTER" />, "hidden md:flex")}
 
                 <div className="flex justify-end pr-2">
                     <DropdownMenu>

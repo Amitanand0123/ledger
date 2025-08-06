@@ -7,6 +7,7 @@ export interface UserDocument {
     fileKey: string;
     type: 'RESUME' | 'COVER_LETTER';
     createdAt: string;
+    latexSource?: string | null;
 }
 
 export const documentApiSlice = createApi({

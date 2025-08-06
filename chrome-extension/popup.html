@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ledger Job Clipper</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="auth-view" class="view">
+        <img src="icons/icon48.png" alt="Ledger Logo">
+        <h2>Connect to Ledger</h2>
+        <p>Please log in to your Ledger web app and click "Connect Extension" on the settings page.</p>
+    </div>
+
+    <div id="main-view" class="view hidden">
+        <div class="header">
+            <img src="icons/icon48.png" alt="Ledger Logo">
+            <h2>Save to Ledger</h2>
+        </div>
+        <form id="job-form">
+            <label for="position">Position</label>
+            <input type="text" id="position" name="position" required>
+
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" required>
+            
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location">
+
+            <label for="salary">Salary</label>
+            <input type="text" id="salary" name="salary">
+
+            <label for="description">Description (Plain Text)</label>
+            <textarea id="description" name="description" rows="5"></textarea>
+
+            <button type="submit" id="add-job-btn">Add Job to Ledger</button>
+        </form>
+    </div>
+
+    <div id="loading-view" class="view hidden">
+        <div class="spinner"></div>
+        <p>Scraping job details...</p>
+    </div>
+
+    <div id="success-view" class="view hidden">
+        <h2>Success!</h2>
+        <p>Job was added to your Ledger.</p>
+    </div>
+
+    <div id="error-view" class="view hidden">
+        <img src="icons/icon48.png" alt="Ledger Logo">
+        <h2>Scraping Failed</h2>
+        <p id="error-message">We couldn't automatically parse the details from this page.</p>
+        <button id="manual-entry-btn">Fill Manually</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import platformRoutes from './routes/platform.routes.js';
 import uploadsRoutes from './routes/uploads.routes.js';
 import userRoutes from './routes/user.routes.js';
 import documentRoutes from  './routes/document.routes.js'
+import agentRoutes from './routes/agent.routes';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/custom-fields', customFieldsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/gcal', gcalRoutes);
 router.use('/documents', documentRoutes); // New route
+router.use('/agent', agentRoutes);
 
 export default router;

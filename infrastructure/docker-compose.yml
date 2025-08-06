@@ -1,6 +1,3 @@
-# infrastructure/docker-compose.yml
-
-# FIXED: Removed the obsolete 'version' attribute.
 services:
   # --- Backend Application ---
   backend:
@@ -25,6 +22,7 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
+        # This build arg ensures the Next.js container knows how to reach the backend container
         NEXT_PUBLIC_API_URL: http://backend:5000
     ports:
       - "3021:3021"
@@ -34,7 +32,7 @@ services:
       - /app/.next
     env_file:
       - ../frontend/.env.local
-    command: npm run start 
+    command: npm run dev # Use 'dev' for local development with hot-reloading
     depends_on:
       - backend
     networks:
@@ -46,16 +44,17 @@ services:
       retries: 5
       start_period: 20s
 
-  # --- Worker Service ---
-  worker:
+  # --- AI Service ---
+  ai-service:
     build:
-      context: ../worker
+      context: ../ai-service
       dockerfile: Dockerfile
+    ports:
+      - "8000:8000" # Expose the FastAPI port
     volumes:
-      - ../worker:/app
-      - /app/node_modules
+      - ../ai-service:/app
     env_file:
-      - ../worker/.env
+      - ../ai-service/.env
     networks:
       - app-network
 
@@ -79,4 +78,3 @@ networks:
 
 volumes:
   postgres-data:
-  es-data:

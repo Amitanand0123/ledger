@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
 import * as JobService from '../services/job.service.js';
+import expressAsyncHandler from 'express-async-handler';
 
 /**
  * @desc    Get all job applications for the logged-in user or a team, with filtering
@@ -98,3 +99,29 @@ export const deleteBulkJobs = asyncHandler(
         });
     }
 )
+
+/**
+ * @desc    Get AI match analysis for a job and a resume
+ * @route   POST /api/v1/jobs/:id/match-analysis
+ * @access  Private
+ */
+export const analyzeJobMatch = asyncHandler(async (req: any, res: Response) => {
+    const { id: jobId } = req.params;
+    const { resumeId } = req.body;
+    if (!resumeId) {
+        res.status(400);
+        throw new Error('resumeId is required in the request body.');
+    }
+    const analysis = await JobService.analyzeMatch(req.user.id, jobId, resumeId);
+    res.status(200).json(analysis);
+});
+
+/**
+ * @desc    Find similar jobs based on a given job's description
+ * @route   GET /api/v1/jobs/:id/similar
+ * @access  Private
+ */
+export const findSimilarJobs = expressAsyncHandler(async (req: any, res: Response) => {
+    const similarJobs = await JobService.findSimilar(req.params.id, req.user.id);
+    res.status(200).json(similarJobs);
+});

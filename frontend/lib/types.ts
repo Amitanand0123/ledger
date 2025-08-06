@@ -29,6 +29,7 @@ export interface UserDocument {
     fileKey: string;
     type: 'RESUME' | 'COVER_LETTER';
     createdAt: string;
+    latexSource?: string | null;
 }
 
 export interface JobApplication {
@@ -39,6 +40,7 @@ export interface JobApplication {
   salary?: string | null;
   url?: string | null;
   description?: string | null;
+  summary?: string | null;
   applicationDate: string; // ISO date string
   status: Status;
   order: number;

@@ -62,6 +62,16 @@ export const jobsApiSlice = createApi({
         query: (id) => ({ url: `jobs/${id}`, method: 'DELETE' }),
         invalidatesTags: (result, error, id) => [{ type: 'Job', id: 'LIST' }],
     }),
+    analyzeJobMatch: builder.mutation<any, { jobId: string, resumeId: string }>({
+        query: ({ jobId, resumeId }) => ({
+            url: `jobs/${jobId}/match-analysis`,
+            method: 'POST',
+            body: { resumeId }
+        }),
+    }),
+    findSimilarJobs: builder.query<JobApplication[], string>({
+        query: (jobId) => `jobs/${jobId}/similar`,
+    }),
     
     // NOTE: A true bulk delete would be a single API call. 
     // This hook is not used directly; we loop over the single delete mutation for simplicity.
@@ -69,4 +79,4 @@ export const jobsApiSlice = createApi({
   }),
 });
 
-export const { useGetJobsQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation } = jobsApiSlice;
+export const { useGetJobsQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation, useFindSimilarJobsQuery } = jobsApiSlice;

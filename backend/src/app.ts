@@ -8,6 +8,8 @@ import config from './config/index.js';
 
 const app: Express = express();
 
+const CHROME_EXTENSION_ID = "YOUR_CHROME_EXTENSION_ID_HERE";
+
 // --- Security & Core Middleware ---
 
 // Set security-related HTTP headers
@@ -16,7 +18,10 @@ app.use(helmet());
 // Enable CORS for the client application
 app.use(
     cors({
-        origin: config.clientUrl,
+        origin: [
+            config.clientUrl,
+            `chrome-extension://${CHROME_EXTENSION_ID}`,
+        ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
         allowedHeaders: [
             'Content-Type', 

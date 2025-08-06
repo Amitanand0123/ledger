@@ -4,6 +4,7 @@ import { logger } from './utils/logger.js';
 import { createServer } from 'http';
 import { initializeSocket } from './socket.js';
 import { initializeEmailService } from './services/email.service.js';
+import { processWebhookQueue } from './services/webhook.processor.js';
 
 const PORT = config.port || 5000;
 
@@ -33,6 +34,9 @@ async function startServer() {
     // Start listening for incoming HTTP requests
     httpServer.listen(PORT, () => {
         logger.info(`🚀 Backend server is running on http://localhost:${PORT}`);
+        logger.info('Starting webhook queue processor...');
+        processWebhookQueue(); // Initial run
+        setInterval(processWebhookQueue, 60 * 1000); // Run every 60 seconds
     });
 }
 

@@ -42,6 +42,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.8",
     "@types/nodemailer": "^6.4.17",
+    "airtable": "^0.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dompurify": "^3.2.6",
@@ -56,11 +57,13 @@
     "jsonwebtoken": "^9.0.2",
     "link-preview-js": "^3.1.0",
     "nodemailer": "^7.0.4",
+    "pdfjs-dist": "^5.4.54",
     "socket.io": "^4.8.1",
     "typescript": "^5.8.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@types/chrome": "^0.1.1",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
     "eslint": "^9.30.0",

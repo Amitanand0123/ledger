@@ -3,6 +3,10 @@ import {
     updateUserProfile,
     changeUserPassword,
     getUserStats,
+    getAdvancedUserStats,
+    updateAirtableSettings,
+    syncToAirtable,
+    updateWebhookSettings
 } from '../../controllers/user.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
 
@@ -17,6 +21,7 @@ router.use(protect);
  * @access  Private
  */
 router.get('/stats', getUserStats);
+router.get('/stats/advanced', getAdvancedUserStats);
 
 /**
  * @route   PUT /api/v1/users/profile
@@ -24,6 +29,11 @@ router.get('/stats', getUserStats);
  * @access  Private
  */
 router.put('/profile', updateUserProfile);
+
+router.put('/settings/airtable', updateAirtableSettings);
+router.post('/settings/airtable/sync', syncToAirtable);
+
+router.put('/settings/webhook', updateWebhookSettings);
 
 /**
  * @route   PUT /api/v1/users/password

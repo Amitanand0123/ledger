@@ -2,18 +2,19 @@
 
 import { FilterPanel } from '@/components/dashboard/filter-panel';
 import { JobFormModal } from '@/components/dashboard/job-form-modal';
-import { useAppSelector } from '@/lib/redux/hooks';
-import { useGetJobsQuery } from '@/lib/redux/slices/jobsApiSlice';
+import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
+import { jobsApiSlice, useGetJobsQuery } from '@/lib/redux/slices/jobsApiSlice';
 import { useSession } from 'next-auth/react';
 import { useMemo, useRef, useState,useEffect } from 'react';
 import { EmptyState } from './empty-state';
 import { JobCardSkeleton } from './job-card.skeleton';
 import { JobDetailsModal } from './job-details-modal';
 import { Loader2 } from 'lucide-react';
-import { parseSalary } from '@/lib/salaryParser';
 import { DragDropContainer } from './drag-drop-container';
 import { Checkbox } from '../ui/checkbox';
 import { DescriptionModal } from './description-modal';
+import { useSocket } from '@/lib/hooks/useSocket';
+import { toast } from 'sonner';
 
 function LoadingState() {
     return (
@@ -28,6 +29,8 @@ function LoadingState() {
 export function DashboardPageContent() {
   const { data: session, status } = useSession();
   const isGuest = status === 'unauthenticated';
+  const dispatch = useAppDispatch();
+  const socket = useSocket();
 
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
 
@@ -39,16 +42,32 @@ export function DashboardPageContent() {
     skip: isGuest || status === 'loading',
   });
 
+  // REAL-TIME UPDATE LOGIC
+  useEffect(() => {
+    if (socket) {
+      const handleJobsUpdate = () => {
+        toast.info("Your job board has been updated.");
+        // Invalidate the 'LIST' tag for the 'Job' type, forcing RTK Query to refetch jobs.
+        dispatch(jobsApiSlice.util.invalidateTags([{ type: 'Job', id: 'LIST' }]));
+      };
+
+      socket.on('jobs_updated', handleJobsUpdate);
+
+      return () => {
+        socket.off('jobs_updated', handleJobsUpdate);
+      };
+    }
+  }, [socket, dispatch]);
+
+
   const jobs = isGuest ? guestJobs : (apiJobs || []);
   const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
 
   const filteredAndSortedJobs = useMemo(() => {
-    let filtered = jobs;
-    if (isGuest) {
-        // Guest filtering logic remains the same
-    }
-    return [...filtered].sort((a, b) => a.order - b.order);
-  }, [jobs, filters, isGuest]);
+    // Backend handles filtering for authenticated users.
+    // For guest users, we could add client-side filtering here if needed.
+    return [...jobs].sort((a, b) => a.order - b.order);
+  }, [jobs]);
   
   useEffect(() => {
     const isIndeterminate = selectedJobIds.size > 0 && selectedJobIds.size < filteredAndSortedJobs.length;
@@ -76,24 +95,23 @@ export function DashboardPageContent() {
   const isFiltered = !!filters.search || (!!filters.status && filters.status !== 'ALL') || !!filters.dateRange || !!filters.salaryMin || !!filters.salaryMax;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-        <FilterPanel 
-            selectedIds={Array.from(selectedJobIds)}
-            clearSelection={() => setSelectedJobIds(new Set())}
-        />
+    <>
+      <FilterPanel 
+          selectedIds={Array.from(selectedJobIds)}
+          clearSelection={() => setSelectedJobIds(new Set())}
+      />
+      <div className="flex-1 overflow-hidden">
         {showInitialLoading ? (
             <LoadingState />
         ) : error ? (
-            <div className="text-center p-10 text-destructive">Error loading jobs. Please refresh.</div>
+            <div className="text-center p-10 text-destructive font-semibold">Error loading jobs. Please refresh.</div>
         ) : hasJobs ? (
-            <div className="flex-1 overflow-y-auto pr-1">
-                {/* FIXED: Overhauled grid layout for all 10 columns + compact widths */}
+            <div className="flex-1 overflow-y-auto pr-1 h-full">
                 <div className="sticky top-0 z-10 grid items-center gap-x-4 p-2 border-b bg-muted/50 font-semibold text-sm text-muted-foreground mb-2 rounded-t-lg text-center
                                 grid-cols-[auto_40px_1.5fr_1fr_40px] 
                                 md:grid-cols-[auto_40px_minmax(120px,1.2fr)_minmax(120px,1.2fr)_130px_minmax(100px,1fr)_100px_100px_100px_1fr_1fr_1fr_40px]">
                     <div className="pl-2"> <Checkbox ref={selectAllCheckboxRef} onCheckedChange={handleSelectAll} checked={selectedJobIds.size > 0 && selectedJobIds.size === filteredAndSortedJobs.length}/> </div>
                     <div>{/* Drag handle */}</div>
-                    {/* Headers in specified order */}
                     <div><span className="md:hidden">Info</span><span className="hidden md:inline">Company</span></div>
                     <div className="hidden md:block">Position</div>
                     <div className="text-center">Status</div>
@@ -115,6 +133,7 @@ export function DashboardPageContent() {
         {isJobFormModalOpen && <JobFormModal />}
         {isJobDetailsModalOpen && <JobDetailsModal />}
         {isDescriptionModalOpen && <DescriptionModal />}
-    </div>
+      </div>
+    </>
   );
 }

@@ -2,6 +2,8 @@ import asyncHandler from 'express-async-handler';
 import { Response } from 'express';
 import * as DocumentService from '../services/document.service.js';
 import { DocType } from '@prisma/client';
+import { prisma } from '../config/db.js';
+import * as S3Service from '../services/s3.service.js';
 
 /**
  * @desc    Create a new document record
@@ -9,7 +11,7 @@ import { DocType } from '@prisma/client';
  * @access  Private
  */
 export const createDocument = asyncHandler(async (req: any, res: Response) => {
-    const { filename, fileKey, type } = req.body;
+    const { filename, fileKey, type, latexSource } = req.body;
     if (!filename || !fileKey || !type) {
         res.status(400);
         throw new Error('Filename, fileKey, and type are required.');
@@ -18,7 +20,7 @@ export const createDocument = asyncHandler(async (req: any, res: Response) => {
         res.status(400);
         throw new Error('Invalid document type.');
     }
-    const doc = await DocumentService.createDocumentRecord(req.user.id, filename, fileKey, type);
+    const doc = await DocumentService.createDocumentRecord(req.user.id, filename, fileKey, type, latexSource);
     res.status(201).json(doc);
 });
 
@@ -47,4 +49,28 @@ export const deleteDocument = asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     await DocumentService.deleteDocumentRecord(id, req.user.id);
     res.status(200).json({ id, message: 'Document deleted successfully.' });
+});
+
+/**
+ * @desc    Get a secure, pre-signed URL to download a document
+ * @route   GET /api/v1/documents/:id/download-url
+ * @access  Private
+ */
+export const getDocumentDownloadUrl = asyncHandler(async (req: any, res: Response) => {
+    const { id: docId } = req.params;
+
+    // 1. Verify the user owns this document
+    const document = await prisma.document.findFirst({
+        where: { id: docId, userId: req.user.id },
+    });
+
+    if (!document) {
+        res.status(404);
+        throw new Error('Document not found or you do not have permission to access it.');
+    }
+
+    // 2. Generate the pre-signed URL
+    const downloadUrl = await S3Service.getDownloadPresignedUrl(document.fileKey);
+
+    res.status(200).json({ url: downloadUrl });
 });

@@ -1,38 +1,49 @@
 name: Continuous Integration
 
+# This workflow runs on pushes to any branch EXCEPT main, and on all pull requests
 on:
+  push:
+    branches-ignore:
+      - 'main'
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - 'main'
 
 jobs:
-  validate:
-    name: Validate Code Quality
+  lint-and-test:
+    name: Lint & Test
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [20.x]
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install All Dependencies
-        # This script is in your root package.json
+      - name: Install root dependencies
+        run: npm install
+
+      # We need to install workspace dependencies as well
+      - name: Install workspace dependencies
         run: npm run install:all
 
-      - name: Run Linting
-        # This script runs linting for both frontend and backend
-        run: npm run test:all
+      - name: Lint Frontend
+        run: npm run lint:frontend
 
-      - name: Check TypeScript Types
-        # Your backend has a dedicated type-check script.
-        # The frontend's types are checked during its build step.
-        run: npm run type-check --workspace=backend
-      
-      - name: Run Production Build Check
-        # This script attempts to build all workspaces. 
-        # It's a great final check to catch errors before merging.
-        run: npm run build:check
+      - name: Lint Backend
+        run: npm run lint:backend
+
+      - name: Run Backend Unit Tests
+        # Provide dummy env vars for the test run.
+        # Tests that need real services (like DB) should be mocked.
+        run: |
+          cp backend/.env.example backend/.env
+          npm run test --workspace=backend
