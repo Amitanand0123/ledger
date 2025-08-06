@@ -1,14 +1,20 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-pydantic
-langchain
-langchain-google-genai
-pinecone-client
-langchain-pinecone
-langchain-community # for sentence-transformers
-sentence-transformers
-langgraph
-langchain-huggingface
+# --- PyTorch CPU-Only Installation ---
+# This special index URL forces pip to download the smaller, CPU-only versions.
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.8.0+cpu
 
+# --- Application Dependencies (Pinned for Reproducible Builds) ---
+# This list is generated from your logs to ensure stability.
+fastapi==0.116.1
+uvicorn==0.35.0
+python-dotenv==1.1.1
+pydantic==2.11.7
+langchain==0.3.27
+langchain-google-genai==2.1.9
+pinecone-client==6.0.0
+langchain-pinecone==0.2.11
+langchain-community==0.3.27
+sentence-transformers==5.1.0
+langgraph==0.6.3
+langchain-huggingface==0.3.1
 google-api-python-client==2.110.0
