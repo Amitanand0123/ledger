@@ -4,24 +4,20 @@ import { useSession } from 'next-auth/react';
 
 const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-/**
- * A custom React hook to manage a Socket.IO connection.
- * It automatically connects when a user session is available and sends the JWT for authentication.
- * It handles cleanup and disconnection when the component unmounts or the user logs out.
- * @returns {Socket | null} The active Socket.IO instance, or null if not connected.
- */
 export const useSocket = (): Socket | null => {
     const { data: session, status } = useSession();
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
+        // Only run this effect if the user is authenticated.
         if (status === 'authenticated' && session?.accessToken) {
+            // Create the new socket connection.
             const newSocket = io(socketUrl, {
                 auth: {
-                    token: session.accessToken,
+                    token: session.accessToken
                 },
                 reconnection: true,
-                reconnectionAttempts: 5,
+                reconnectionAttempts: 5
             });
 
             newSocket.on('connect', () => {
@@ -35,19 +31,13 @@ export const useSocket = (): Socket | null => {
             newSocket.on('disconnect', () => {
                 console.log('Socket.IO Client Disconnected.');
             });
-
             setSocket(newSocket);
-            
             return () => {
+                console.log('Disconnecting socket...');
                 newSocket.disconnect();
             };
-        } else {
-            if(socket) {
-                socket.disconnect();
-                setSocket(null);
-            }
         }
-    }, [status, session, socket]);
+    }, [status, session]);
 
     return socket;
 };
