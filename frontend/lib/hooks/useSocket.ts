@@ -14,10 +14,10 @@ export const useSocket = (): Socket | null => {
             // Create the new socket connection.
             const newSocket = io(socketUrl, {
                 auth: {
-                    token: session.accessToken
+                    token: session.accessToken,
                 },
                 reconnection: true,
-                reconnectionAttempts: 5
+                reconnectionAttempts: 5,
             });
 
             newSocket.on('connect', () => {
