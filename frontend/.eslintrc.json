@@ -16,6 +16,6 @@
     "@typescript-eslint/no-explicit-any": "off",
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
-    "comma-dangle": ["error", "es5"]
+    "comma-dangle": ["error", "always-multiline"]
   }
 }
