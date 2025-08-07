@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from "react"; 
+import { Suspense } from 'react'; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UpdateProfileForm } from './_components/update-profile-form';
 import { ChangePasswordForm } from './_components/change-password-form';
@@ -11,7 +11,7 @@ import { ManageAirtableSync } from './_components/manage-airtable-sync';
 import { ManageAutomations } from './_components/manage-automation';
 import { ManageGcalSync } from './_components/manage-gcal-sync';
 import { ConnectExtension } from './_components/connect-extension';
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton';
 
 function GcalSyncLoading() {
     return (
@@ -24,7 +24,7 @@ function GcalSyncLoading() {
                 <Skeleton className="h-10 w-48" />
             </CardContent>
         </Card>
-    )
+    );
 }
 
 export default function SettingsPage() {
