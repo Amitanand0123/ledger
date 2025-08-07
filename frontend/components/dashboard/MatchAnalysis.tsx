@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from "react";
-import { useGetDocumentsQuery } from "@/lib/redux/slices/documentApiSlice";
-import { useAnalyzeJobMatchMutation } from "@/lib/redux/slices/jobsApiSlice";
-import { Button } from "../ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Loader2, Wand2 } from "lucide-react";
-import { toast } from "sonner";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useState } from 'react';
+import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
+import { useAnalyzeJobMatchMutation } from '@/lib/redux/slices/jobsApiSlice';
+import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Loader2, Wand2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 interface MatchAnalysisProps {
     jobId: string;
@@ -21,13 +21,13 @@ export function MatchAnalysis({ jobId }: MatchAnalysisProps) {
 
     const handleAnalyze = () => {
         if (!selectedResumeId) {
-            toast.error("Please select a resume to analyze.");
+            toast.error('Please select a resume to analyze.');
             return;
         }
         toast.promise(analyzeMatch({ jobId, resumeId: selectedResumeId }).unwrap(), {
-            loading: "Analyzing match with AI...",
-            success: "Analysis complete!",
-            error: (err) => err.data?.message || "Failed to get analysis."
+            loading: 'Analyzing match with AI...',
+            success: 'Analysis complete!',
+            error: (err) => err.data?.message || 'Failed to get analysis.',
         });
     };
 
@@ -37,7 +37,7 @@ export function MatchAnalysis({ jobId }: MatchAnalysisProps) {
             <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Select onValueChange={setSelectedResumeId} disabled={isLoadingResumes}>
                     <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={isLoadingResumes ? "Loading resumes..." : "Select a resume"}/>
+                        <SelectValue placeholder={isLoadingResumes ? 'Loading resumes...' : 'Select a resume'}/>
                     </SelectTrigger>
                     <SelectContent>
                         {resumes?.map(resume => (

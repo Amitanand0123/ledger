@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useGetGoogleAuthUrlMutation } from "@/lib/redux/slices/userApiSlice";
-import { toast } from "sonner";
-import { Loader2, CalendarPlus } from "lucide-react";
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useGetGoogleAuthUrlMutation } from '@/lib/redux/slices/userApiSlice';
+import { toast } from 'sonner';
+import { Loader2, CalendarPlus } from 'lucide-react';
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export function ManageGcalSync() {
     const [getAuthUrl, { isLoading }] = useGetGoogleAuthUrlMutation();
@@ -16,9 +16,9 @@ export function ManageGcalSync() {
         // Check for the status in the URL query params after redirect from Google
         const status = searchParams?.get('gcal_status');
         if (status === 'success') {
-            toast.success("Google Calendar connected successfully!");
+            toast.success('Google Calendar connected successfully!');
         } else if (status === 'error') {
-            toast.error("Failed to connect Google Calendar. Please try again.");
+            toast.error('Failed to connect Google Calendar. Please try again.');
         }
     }, [searchParams]);
 
@@ -28,7 +28,7 @@ export function ManageGcalSync() {
             // Redirect the user to the Google consent screen
             window.location.href = url;
         } catch (error) {
-            toast.error("Could not get Google authentication URL. Please try again later.");
+            toast.error('Could not get Google authentication URL. Please try again later.');
         }
     };
 

@@ -42,7 +42,7 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 10 },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -105,7 +105,7 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
                     </div>
                 )}
             </DragOverlay>,
-            document.body
+            document.body,
         )}
       </DndContext>
   );

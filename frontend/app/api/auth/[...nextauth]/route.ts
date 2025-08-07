@@ -1,5 +1,5 @@
-import NextAuth from "next-auth";
-import { authOptions } from "@/lib/auth"; // Assumes your NextAuth config is in lib/auth.ts
+import NextAuth from 'next-auth';
+import { authOptions } from '@/lib/auth'; // Assumes your NextAuth config is in lib/auth.ts
 
 /**
  * The NextAuth.js API route handler.

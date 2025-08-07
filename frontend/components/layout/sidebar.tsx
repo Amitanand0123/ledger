@@ -1,5 +1,5 @@
-import { BarChart3, Home, Settings } from "lucide-react"
-import { NavLink } from "./nav-link"
+import { BarChart3, Home, Settings } from 'lucide-react';
+import { NavLink } from './nav-link';
 
 export function Sidebar() {
   // This component is now just a block of navigation links,
@@ -19,5 +19,5 @@ export function Sidebar() {
             Settings
         </NavLink>
     </nav>
-  )
+  );
 }

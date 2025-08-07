@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { UpdateProfileForm } from "./_components/update-profile-form"
-import { ChangePasswordForm } from "./_components/change-password-form"
-import { ManageCustomFields } from "./_components/manage-custom-fields"
-import { useSession } from "next-auth/react"
-import { ManageDocuments } from "@/components/settings/manage-documents" 
-import { ManageAirtableSync } from "./_components/manage-airtable-sync"
-import { ManageAutomations } from "./_components/manage-automation"
-import { ManageGcalSync } from "./_components/manage-gcal-sync"
-import { ConnectExtension } from "./_components/connect-extension";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UpdateProfileForm } from './_components/update-profile-form';
+import { ChangePasswordForm } from './_components/change-password-form';
+import { ManageCustomFields } from './_components/manage-custom-fields';
+import { useSession } from 'next-auth/react';
+import { ManageDocuments } from '@/components/settings/manage-documents'; 
+import { ManageAirtableSync } from './_components/manage-airtable-sync';
+import { ManageAutomations } from './_components/manage-automation';
+import { ManageGcalSync } from './_components/manage-gcal-sync';
+import { ConnectExtension } from './_components/connect-extension';
 
 export default function SettingsPage() {
     const { data: session } = useSession();
@@ -53,5 +53,5 @@ export default function SettingsPage() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

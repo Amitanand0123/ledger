@@ -1,43 +1,43 @@
-'use client'
+'use client';
 
-import { Status } from "@/lib/types";
-import { useUpdateJobMutation } from "@/lib/redux/slices/jobsApiSlice";
-import { useSession } from "next-auth/react";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { updateGuestJob } from "@/lib/redux/slices/guestJobsSlice";
+import { Status } from '@/lib/types';
+import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
+import { useSession } from 'next-auth/react';
+import { useAppDispatch } from '@/lib/redux/hooks';
+import { updateGuestJob } from '@/lib/redux/slices/guestJobsSlice';
 import { 
     DropdownMenu, 
     DropdownMenuContent, 
     DropdownMenuRadioGroup, 
     DropdownMenuRadioItem, 
-    DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "../ui/badge";
-import { toast } from "sonner";
+    DropdownMenuTrigger, 
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
 
 // An array defining the order and availability of statuses
 const STATUS_OPTIONS: Status[] = [
-    "PENDING", 
-    "SHORTLISTED", 
-    "OA", // Online Assessment
-    "INTERVIEW_1", 
-    "INTERVIEW_2", 
-    "INTERVIEW_FINAL", 
-    "HIRED", 
-    "REJECTED"
+    'PENDING', 
+    'SHORTLISTED', 
+    'OA', // Online Assessment
+    'INTERVIEW_1', 
+    'INTERVIEW_2', 
+    'INTERVIEW_FINAL', 
+    'HIRED', 
+    'REJECTED',
 ];
 
 // A mapping from each status to a specific Tailwind CSS background color class.
 // We'll use your custom theme colors and some standard ones for semantics.
 const statusColorMap: Record<Status, string> = {
-    PENDING: "bg-gray-400 dark:bg-gray-600",
-    SHORTLISTED: "bg-brand-secondary", // Using your theme
-    OA: "bg-yellow-500",
-    INTERVIEW_1: "bg-brand-primary", // Using your theme
-    INTERVIEW_2: "bg-brand-primary/80", // Using your theme with opacity
-    INTERVIEW_FINAL: "bg-brand-primary/60", // Using your theme with more opacity
-    HIRED: "bg-brand-accent-success text-green-900", // Using your theme
-    REJECTED: "bg-red-600",
+    PENDING: 'bg-gray-400 dark:bg-gray-600',
+    SHORTLISTED: 'bg-brand-secondary', // Using your theme
+    OA: 'bg-yellow-500',
+    INTERVIEW_1: 'bg-brand-primary', // Using your theme
+    INTERVIEW_2: 'bg-brand-primary/80', // Using your theme with opacity
+    INTERVIEW_FINAL: 'bg-brand-primary/60', // Using your theme with more opacity
+    HIRED: 'bg-brand-accent-success text-green-900', // Using your theme
+    REJECTED: 'bg-red-600',
 };
 
 interface StatusDropdownProps {
@@ -62,19 +62,19 @@ export function StatusDropdown({ jobId, currentStatus }: StatusDropdownProps) {
         if (isGuest) {
             // Handle guest mode: dispatch a local Redux action
             dispatch(updateGuestJob({ id: jobId, status: newStatusTyped }));
-            toast.info("Status updated for demo job.");
+            toast.info('Status updated for demo job.');
         } else {
             // Handle authenticated user: call the RTK Query mutation
             toast.promise(updateJob({ id: jobId, status: newStatusTyped }).unwrap(), {
                 loading: 'Updating status...',
                 success: `Status updated to ${newStatusTyped.replace(/_/g, ' ')}`,
-                error: 'Failed to update status.'
+                error: 'Failed to update status.',
             });
         }
     };
     
     // Get the color class for the current status, with a fallback
-    const badgeColorClass = statusColorMap[currentStatus] || "bg-gray-500";
+    const badgeColorClass = statusColorMap[currentStatus] || 'bg-gray-500';
     
     return (
         <DropdownMenu>

@@ -6,9 +6,9 @@ import * as z from 'zod';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { registerSchema } from '@/lib/validations';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ export function RegisterForm() {
             await signIn('credentials', { redirect: false, email: data.email, password: data.password });
             router.push('/');
             router.refresh();
-            return "Account created! Logging you in...";
+            return 'Account created! Logging you in...';
         },
         error: (err) => {
             setIsLoading(false);

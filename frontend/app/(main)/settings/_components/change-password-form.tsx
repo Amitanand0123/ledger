@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
-import { userPasswordSchema } from "@/lib/validations";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+import { userPasswordSchema } from '@/lib/validations';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 type PasswordFormValues = z.infer<typeof userPasswordSchema>;
 
@@ -26,23 +26,23 @@ export function ChangePasswordForm() {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.accessToken}`
+                    'Authorization': `Bearer ${session?.accessToken}`,
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to change password.");
+                throw new Error(errorData.message || 'Failed to change password.');
             }
 
-            toast.success("Password changed successfully!");
+            toast.success('Password changed successfully!');
             reset();
 
         } catch (error: any) {
             toast.error(error.message);
         }
-    }
+    };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-lg">

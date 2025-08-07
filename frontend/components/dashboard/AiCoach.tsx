@@ -1,16 +1,16 @@
 // frontend/components/dashboard/AiCoach.tsx
 'use client';
 
-import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { useGetDocumentsQuery } from "@/lib/redux/slices/documentApiSlice";
-import { useInvokeAgentMutation } from "@/lib/redux/slices/agentApiSlice";
-import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Loader2, Sparkles } from "lucide-react";
-import { toast } from "sonner";
-import { Label } from "../ui/label";
+import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
+import { useInvokeAgentMutation } from '@/lib/redux/slices/agentApiSlice';
+import { Button } from '../ui/button';
+import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Loader2, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import { Label } from '../ui/label';
 
 interface AiCoachProps {
     jobId: string;
@@ -19,8 +19,8 @@ interface AiCoachProps {
 export function AiCoach({ jobId }: AiCoachProps) {
     // --- STATE MANAGEMENT FIX ---
     // State to hold the ID of the currently selected resume from the dropdown.
-    const [selectedResumeId, setSelectedResumeId] = useState<string>("");
-    const [userGoal, setUserGoal] = useState("Help me tailor my resume and prepare for this job.");
+    const [selectedResumeId, setSelectedResumeId] = useState<string>('');
+    const [userGoal, setUserGoal] = useState('Help me tailor my resume and prepare for this job.');
     
     const { data: resumes, isLoading: isLoadingResumes } = useGetDocumentsQuery('RESUME');
     const [invokeAgent, { data, isLoading: isThinking, error, reset }] = useInvokeAgentMutation();
@@ -37,16 +37,16 @@ export function AiCoach({ jobId }: AiCoachProps) {
         // --- CLIENT-SIDE VALIDATION ---
         // Prevent API call if no resume is selected.
         if (!selectedResumeId) {
-            toast.error("Please select a resume to analyze.");
+            toast.error('Please select a resume to analyze.');
             return;
         }
         // Clear previous results before making a new request
         reset();
         
         toast.promise(invokeAgent({ jobId, resumeId: selectedResumeId, userGoal }).unwrap(), {
-            loading: "Your AI Coach is analyzing your resume against the job description...",
-            success: "AI analysis complete!",
-            error: (err) => err.data?.message || "An unexpected error occurred."
+            loading: 'Your AI Coach is analyzing your resume against the job description...',
+            success: 'AI analysis complete!',
+            error: (err) => err.data?.message || 'An unexpected error occurred.',
         });
     };
 
@@ -67,7 +67,7 @@ export function AiCoach({ jobId }: AiCoachProps) {
                     disabled={isLoadingResumes || !resumes || resumes.length === 0}
                 >
                     <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={isLoadingResumes ? "Loading resumes..." : "Select a resume"}/>
+                        <SelectValue placeholder={isLoadingResumes ? 'Loading resumes...' : 'Select a resume'}/>
                     </SelectTrigger>
                     <SelectContent>
                         {!resumes || resumes.length === 0 ? (
@@ -92,7 +92,7 @@ export function AiCoach({ jobId }: AiCoachProps) {
                 </div>
             )}
             
-            {error && <p className="text-destructive text-sm font-semibold text-center pt-2">{(error as any).data?.message || "Failed to get advice."}</p>}
+            {error && <p className="text-destructive text-sm font-semibold text-center pt-2">{(error as any).data?.message || 'Failed to get advice.'}</p>}
             
             {data && (
                 <div className="prose prose-sm dark:prose-invert max-w-none border-t pt-4 mt-4">

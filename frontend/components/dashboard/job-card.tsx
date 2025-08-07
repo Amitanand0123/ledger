@@ -13,7 +13,7 @@ import { StatusCombobox } from './status-combobox';
 import { useSession } from 'next-auth/react';
 import { deleteGuestJob, updateGuestJob } from '@/lib/redux/slices/guestJobsSlice';
 import { Checkbox } from '../ui/checkbox';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { TruncatedText } from '../ui/truncated-text';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -46,7 +46,7 @@ function DocumentSelector({ job, type }: { job: JobApplication, type: 'RESUME' |
         toast.promise(updateJob({ id: job.id, [fieldToUpdate]: newId }).unwrap(), {
             loading: `Updating ${type.toLowerCase()}...`,
             success: `${type.charAt(0) + type.slice(1).toLowerCase()} updated!`,
-            error: 'Failed to update.'
+            error: 'Failed to update.',
         });
         setIsOpen(false);
     };
@@ -99,10 +99,10 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
             action: { label: 'Delete', onClick: () => {
                 if (isGuest) {
                     dispatch(deleteGuestJob(job.id));
-                    toast.success("Demo job deleted.");
+                    toast.success('Demo job deleted.');
                 } else {
                     toast.promise(deleteJobApi(job.id).unwrap(), {
-                        loading: 'Deleting...', success: `Application deleted.`, error: 'Failed to delete.'
+                        loading: 'Deleting...', success: 'Application deleted.', error: 'Failed to delete.',
                     });
                 }
             }},
@@ -113,10 +113,10 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
         if (newStatus === job.status) return;
         if (isGuest) {
             dispatch(updateGuestJob({ id: job.id, status: newStatus }));
-            toast.info("Status updated for demo job.");
+            toast.info('Status updated for demo job.');
         } else {
             toast.promise(updateJobApi({ id: job.id, status: newStatus }).unwrap(), {
-                loading: 'Updating status...', success: `Status updated`, error: 'Failed to update.'
+                loading: 'Updating status...', success: 'Status updated', error: 'Failed to update.',
             });
         }
     };
@@ -147,16 +147,16 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
                     <p className="font-semibold truncate text-foreground">{job.company}</p>
                     <p className="truncate text-muted-foreground md:hidden">{job.position}</p>
                 </div>
-                {renderCell(<TruncatedText text={job.position} maxLength={25} />, "hidden md:flex text-left", handleViewDetails)}
+                {renderCell(<TruncatedText text={job.position} maxLength={25} />, 'hidden md:flex text-left', handleViewDetails)}
                 {/* FIXED: The onClick handler now correctly matches the expected signature */}
-                {renderCell(<StatusCombobox currentStatus={job.status} onStatusChange={handleStatusChange} />, "", (e) => e.stopPropagation())}
-                {renderCell(<div className='flex items-center gap-1'><MapPin size={14}/><TruncatedText text={job.location} maxLength={15}/></div>, "hidden md:flex", handleViewDetails)}
-                {renderCell(<span>{new Date(job.applicationDate).toLocaleDateString()}</span>, "hidden md:flex", handleViewDetails)}
-                {renderCell(<TruncatedText text={job.platform?.name} maxLength={15}/>, "hidden md:flex", handleViewDetails)}
-                {renderCell(job.url ? <a href={job.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-1 hover:text-primary"><LinkIcon size={14}/> Link</a> : <span className="text-muted-foreground">N/A</span>, "hidden md:flex")}
-                {renderCell(<TruncatedText text={job.description} maxLength={30}/>, "hidden md:flex hover:text-primary", handleOpenDescriptionModal)}
-                {renderCell(<DocumentSelector job={job} type="RESUME" />, "hidden md:flex")}
-                {renderCell(<DocumentSelector job={job} type="COVER_LETTER" />, "hidden md:flex")}
+                {renderCell(<StatusCombobox currentStatus={job.status} onStatusChange={handleStatusChange} />, '', (e) => e.stopPropagation())}
+                {renderCell(<div className='flex items-center gap-1'><MapPin size={14}/><TruncatedText text={job.location} maxLength={15}/></div>, 'hidden md:flex', handleViewDetails)}
+                {renderCell(<span>{new Date(job.applicationDate).toLocaleDateString()}</span>, 'hidden md:flex', handleViewDetails)}
+                {renderCell(<TruncatedText text={job.platform?.name} maxLength={15}/>, 'hidden md:flex', handleViewDetails)}
+                {renderCell(job.url ? <a href={job.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-1 hover:text-primary"><LinkIcon size={14}/> Link</a> : <span className="text-muted-foreground">N/A</span>, 'hidden md:flex')}
+                {renderCell(<TruncatedText text={job.description} maxLength={30}/>, 'hidden md:flex hover:text-primary', handleOpenDescriptionModal)}
+                {renderCell(<DocumentSelector job={job} type="RESUME" />, 'hidden md:flex')}
+                {renderCell(<DocumentSelector job={job} type="COVER_LETTER" />, 'hidden md:flex')}
 
                 <div className="flex justify-end pr-2">
                     <DropdownMenu>

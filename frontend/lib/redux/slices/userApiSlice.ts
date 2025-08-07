@@ -21,27 +21,27 @@ export const userApiSlice = createApi({
     }),
     updateAirtableSettings: builder.mutation<any, { apiKey: string, baseId: string, tableName: string }>({
         query: (body) => ({
-            url: `users/settings/airtable`,
+            url: 'users/settings/airtable',
             method: 'PUT',
             body,
         }),
     }),
     syncToAirtable: builder.mutation<{ message: string }, void>({
         query: () => ({
-            url: `users/settings/airtable/sync`,
+            url: 'users/settings/airtable/sync',
             method: 'POST',
         }),
     }),
     updateWebhookSettings: builder.mutation<any, { eventType: string, targetUrl: string }>({
         query: (body) => ({
-            url: `users/settings/webhook`,
+            url: 'users/settings/webhook',
             method: 'PUT',
             body,
-        })
+        }),
     }),
     getGoogleAuthUrl: builder.mutation<{ url: string }, void>({
         query: () => ({
-            url: `gcal/auth-url`,
+            url: 'gcal/auth-url',
             method: 'GET', // Although it's a mutation from the client's perspective, it hits a GET endpoint
         }),
     }),

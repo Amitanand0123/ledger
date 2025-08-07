@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAddCustomFieldMutation } from "@/lib/redux/slices/customFieldsApiSlice";
-import { useForm, Controller } from "react-hook-form";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAddCustomFieldMutation } from '@/lib/redux/slices/customFieldsApiSlice';
+import { useForm, Controller } from 'react-hook-form';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface CustomFieldFormModalProps {
     isOpen: boolean;
@@ -17,7 +17,7 @@ interface CustomFieldFormModalProps {
 
 export function CustomFieldFormModal({ isOpen, onClose }: CustomFieldFormModalProps) {
     const { register, handleSubmit, reset, control, formState: { errors } } = useForm({
-        defaultValues: { name: '', type: 'TEXT' }
+        defaultValues: { name: '', type: 'TEXT' },
     });
     const [addCustomField, { isLoading }] = useAddCustomFieldMutation();
 
@@ -29,9 +29,9 @@ export function CustomFieldFormModal({ isOpen, onClose }: CustomFieldFormModalPr
                 onClose();
                 return `Custom field "${newField.name}" added!`;
             },
-            error: (err) => err.data?.message || 'Failed to add field.'
+            error: (err) => err.data?.message || 'Failed to add field.',
         });
-    }
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -42,7 +42,7 @@ export function CustomFieldFormModal({ isOpen, onClose }: CustomFieldFormModalPr
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Field Name</Label>
-                        <Input id="name" {...register('name', { required: "Field name is required." })} placeholder="e.g., Referral Source" />
+                        <Input id="name" {...register('name', { required: 'Field name is required.' })} placeholder="e.g., Referral Source" />
                         {errors.name && <p className="text-sm text-red-600 dark:text-red-500">{errors.name.message}</p>}
                     </div>
                     <div className="space-y-2">

@@ -11,7 +11,7 @@ export function AddJobButton() {
     const handleClick = () => {
         dispatch(setEditingJob(null)); // Ensure we're not in edit mode
         dispatch(openJobFormModal());
-    }
+    };
 
     return (
         <Button 

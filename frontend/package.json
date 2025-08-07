@@ -10,7 +10,7 @@
     "dev": "cross-env PORT=3021 next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --fix",
+    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false next lint --fix",
     "test": "npm run lint"
   },
   "keywords": [],

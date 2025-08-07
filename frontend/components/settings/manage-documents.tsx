@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetDocumentsQuery, useDeleteDocumentMutation, documentApiSlice } from "@/lib/redux/slices/documentApiSlice";
-import { Loader2, PlusCircle, Trash2, FileText, UploadCloud } from "lucide-react";
-import { toast } from "sonner";
-import { useSession } from "next-auth/react";
-import { Input } from "../ui/input";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { DocumentUploader } from "./DocumentUploader";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetDocumentsQuery, useDeleteDocumentMutation, documentApiSlice } from '@/lib/redux/slices/documentApiSlice';
+import { Loader2, PlusCircle, Trash2, FileText, UploadCloud } from 'lucide-react';
+import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
+import { Input } from '../ui/input';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAppDispatch } from '@/lib/redux/hooks';
+import { DocumentUploader } from './DocumentUploader';
 
 interface DocumentUploaderProps {
     type: 'RESUME' | 'COVER_LETTER';
@@ -149,11 +149,11 @@ export function ManageDocuments() {
                 toast.promise(deleteDocument(id).unwrap(), {
                     loading: 'Deleting document...',
                     success: `Document "${name}" deleted.`,
-                    error: (err) => err.data?.message || 'Failed to delete document.'
+                    error: (err) => err.data?.message || 'Failed to delete document.',
                 });
             }},
             // cancel: { label: "Cancel" },
-            duration: 10000
+            duration: 10000,
         });
     };
     

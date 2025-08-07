@@ -13,7 +13,8 @@ import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
 import { MatchAnalysis } from './MatchAnalysis';
 import { AiCoach } from './AiCoach';
-import { SimilarJobs } from "./SimilarJobs";
+import { SimilarJobs } from './SimilarJobs';
+import Image from 'next/image';
 
 function StatusHistoryTimeline({ history }: { history: any[] }) {
     if (!history || history.length === 0) {
@@ -45,11 +46,11 @@ export function JobDetailsModal() {
         queryFn: async () => {
             if (!viewingJob?.id || !session?.accessToken) return null;
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/analyze/${viewingJob.id}`, {
-                headers: { 'Authorization': `Bearer ${session.accessToken}` }
+                headers: { 'Authorization': `Bearer ${session.accessToken}` },
             });
             if (!res.ok) {
                 const error = await res.json();
-                throw new Error(error.message || "Failed to fetch AI analysis.");
+                throw new Error(error.message || 'Failed to fetch AI analysis.');
             }
             return res.json();
         },
@@ -60,17 +61,17 @@ export function JobDetailsModal() {
 
     const saveAnalysisMutation = useMutation({
         mutationFn: (analysis: string) => {
-            if (!viewingJob) throw new Error("No job selected");
+            if (!viewingJob) throw new Error('No job selected');
             return updateJob({ id: viewingJob.id, description: analysis }).unwrap();
         },
         onSuccess: () => {
-            toast.success("AI summary saved as the new job description!");
+            toast.success('AI summary saved as the new job description!');
             queryClient.invalidateQueries({ queryKey: ['jobs'] });
             dispatch(closeJobDetailsModal());
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to save analysis.");
-        }
+            toast.error(error.message || 'Failed to save analysis.');
+        },
     });
 
     const handleAnalyzeClick = () => {
@@ -78,7 +79,7 @@ export function JobDetailsModal() {
         toast.promise(refetch(), {
             loading: 'Generating AI insights...',
             success: 'Analysis complete!',
-            error: (err: any) => err.message || 'Failed to generate analysis.'
+            error: (err: any) => err.message || 'Failed to generate analysis.',
         });
     };
 
@@ -101,7 +102,7 @@ export function JobDetailsModal() {
                         <div>
                              <h4 className="font-semibold mb-2 text-foreground">Job Listing</h4>
                              <a href={viewingJob.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-brand-primary hover:underline font-medium">
-                                 <img src={`https://www.google.com/s2/favicons?domain=${new URL(viewingJob.url).hostname}&sz=32`} alt="favicon" width={16} height={16} className="rounded" />
+                                 <Image src={`https://www.google.com/s2/favicons?domain=${new URL(viewingJob.url).hostname}&sz=32`} alt="favicon" width={16} height={16} className="rounded" />
                                  <span>{new URL(viewingJob.url).hostname}</span>
                                  <Link2 className="h-4 w-4 text-muted-foreground"/>
                              </a>

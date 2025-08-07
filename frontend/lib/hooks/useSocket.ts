@@ -18,10 +18,10 @@ export const useSocket = (): Socket | null => {
         if (status === 'authenticated' && session?.accessToken) {
             const newSocket = io(socketUrl, {
                 auth: {
-                    token: session.accessToken
+                    token: session.accessToken,
                 },
                 reconnection: true,
-                reconnectionAttempts: 5
+                reconnectionAttempts: 5,
             });
 
             newSocket.on('connect', () => {
@@ -47,7 +47,7 @@ export const useSocket = (): Socket | null => {
                 setSocket(null);
             }
         }
-    }, [status, session]);
+    }, [status, session, socket]);
 
     return socket;
 };

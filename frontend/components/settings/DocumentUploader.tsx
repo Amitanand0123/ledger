@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, UploadCloud } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, UploadCloud } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface DocumentUploaderProps {
     type: 'RESUME' | 'COVER_LETTER';
@@ -19,7 +19,7 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
     const { data: session } = useSession();
     const [isUploading, setIsUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [latexSource, setLatexSource] = useState("");
+    const [latexSource, setLatexSource] = useState('');
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -28,11 +28,11 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            toast.error("Please select a file to upload.");
+            toast.error('Please select a file to upload.');
             return;
         }
         if (!session) {
-            toast.error("Authentication error. Please log in again.");
+            toast.error('Authentication error. Please log in again.');
             return;
         }
         
@@ -44,16 +44,16 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${session.accessToken}` 
+                    'Authorization': `Bearer ${session.accessToken}`, 
                 },
-                body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type })
+                body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type }),
             });
-            if (!presignedUrlRes.ok) throw new Error("Could not get an upload URL from the server.");
+            if (!presignedUrlRes.ok) throw new Error('Could not get an upload URL from the server.');
             const { signedUrl, key } = await presignedUrlRes.json();
 
             // Step 2: Upload the file directly to S3 using the presigned URL
             const s3UploadRes = await fetch(signedUrl, { method: 'PUT', body: selectedFile });
-            if (!s3UploadRes.ok) throw new Error("File upload to storage failed.");
+            if (!s3UploadRes.ok) throw new Error('File upload to storage failed.');
 
             // Step 3: Create the document record in our database
             const docCreateBody: {
@@ -65,24 +65,24 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
                 filename: selectedFile.name, 
                 fileKey: key, 
                 type,
-                ...(type === 'RESUME' && latexSource && { latexSource: latexSource })
+                ...(type === 'RESUME' && latexSource && { latexSource: latexSource }),
             };
             
             const docCreateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${session.accessToken}` 
+                    'Authorization': `Bearer ${session.accessToken}`, 
                 },
-                body: JSON.stringify(docCreateBody)
+                body: JSON.stringify(docCreateBody),
             });
-            if (!docCreateRes.ok) throw new Error("Failed to save the document record.");
+            if (!docCreateRes.ok) throw new Error('Failed to save the document record.');
             
             toast.success(`File "${selectedFile.name}" uploaded successfully!`);
             onUploadComplete();
 
         } catch (error: any) {
-            toast.error(error.message || "An unexpected error occurred during upload.");
+            toast.error(error.message || 'An unexpected error occurred during upload.');
         } finally {
             setIsUploading(false);
         }
@@ -123,7 +123,7 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
                         disabled={isUploading}
                     />
                     <p className="text-xs text-muted-foreground">
-                        Providing this enables the "AI Resume Rebuilder" feature. The uploaded file should be the PDF compiled from this source.
+                        Providing this enables the &quot;AI Resume Rebuilder&quot; feature. The uploaded file should be the PDF compiled from this source.
                     </p>
                 </TabsContent>
             </Tabs>

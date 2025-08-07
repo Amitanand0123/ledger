@@ -27,9 +27,9 @@ export function DescriptionModal() {
         queryFn: async () => {
             if (!job?.id || !session?.accessToken) return null;
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/analyze/${job.id}`, {
-                headers: { 'Authorization': `Bearer ${session.accessToken}` }
+                headers: { 'Authorization': `Bearer ${session.accessToken}` },
             });
-            if (!res.ok) throw new Error((await res.json()).message || "Failed to fetch AI analysis.");
+            if (!res.ok) throw new Error((await res.json()).message || 'Failed to fetch AI analysis.');
             const data = await res.json();
             setSummary(data.analysis);
             return data;
@@ -41,7 +41,7 @@ export function DescriptionModal() {
         toast.promise(refetch(), {
             loading: 'Generating AI summary...',
             success: 'Summary complete!',
-            error: (err: any) => err.message || 'Failed to generate summary.'
+            error: (err: any) => err.message || 'Failed to generate summary.',
         });
     };
 
@@ -51,7 +51,7 @@ export function DescriptionModal() {
         toast.promise(updateJob({ id: job.id, summary: summary }).unwrap(), {
             loading: 'Saving summary...',
             success: () => { handleClose(); return 'Summary saved successfully!'; },
-            error: 'Failed to save summary.'
+            error: 'Failed to save summary.',
         });
     };
     
@@ -76,7 +76,7 @@ export function DescriptionModal() {
                             <h4 className="font-semibold text-foreground">AI Summary</h4>
                             <Button size="sm" variant="outline" onClick={handleAnalyzeClick} disabled={isAnalysisLoading} className="bg-background">
                                 {isAnalysisLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <BrainCircuit className="mr-2 h-4 w-4 text-primary" />}
-                                 {currentSummary ? "Re-Summarize" : "Summarize"}
+                                 {currentSummary ? 'Re-Summarize' : 'Summarize'}
                             </Button>
                         </div>
                         {isAnalysisLoading && <p className='text-sm text-muted-foreground'>Generating summary...</p>}
@@ -98,7 +98,7 @@ export function DescriptionModal() {
                         </AccordionTrigger>
                         <AccordionContent className='rounded-md border bg-muted p-3'>
                             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                {job.description || "No original description was provided."}
+                                {job.description || 'No original description was provided.'}
                             </p>
                         </AccordionContent>
                       </AccordionItem>

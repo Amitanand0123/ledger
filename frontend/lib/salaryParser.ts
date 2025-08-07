@@ -7,7 +7,7 @@
  * @returns An object containing `min` and `max` numeric values, or an empty object if no numbers are found.
  */
 export const parseSalary = (
-    salary: string | null | undefined
+    salary: string | null | undefined,
 ): { min?: number; max?: number } => {
     // If the input is null, undefined, or an empty string, return immediately.
     if (!salary) {

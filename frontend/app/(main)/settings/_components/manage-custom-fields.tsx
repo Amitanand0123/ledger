@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetCustomFieldsQuery, useDeleteCustomFieldMutation } from "@/lib/redux/slices/customFieldsApiSlice";
-import { Loader2, PlusCircle, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { CustomFieldFormModal } from "./custom-field-form-modal";
-import { toast } from "sonner";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetCustomFieldsQuery, useDeleteCustomFieldMutation } from '@/lib/redux/slices/customFieldsApiSlice';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { CustomFieldFormModal } from './custom-field-form-modal';
+import { toast } from 'sonner';
 
 export function ManageCustomFields() {
     const { data: customFields, isLoading } = useGetCustomFieldsQuery();
@@ -18,10 +18,10 @@ export function ManageCustomFields() {
             toast.promise(deleteCustomField(id).unwrap(), {
                 loading: 'Deleting field...',
                 success: `Field "${name}" deleted.`,
-                error: 'Failed to delete field.'
+                error: 'Failed to delete field.',
             });
         }
-    }
+    };
 
     return (
         <>

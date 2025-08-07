@@ -1,21 +1,21 @@
 // frontend/components/dashboard/AiResumeRebuilder.tsx
 'use client';
 
-import { useEffect, useState } from "react";
-import { useGetDocumentsQuery } from "@/lib/redux/slices/documentApiSlice";
-import { useRebuildResumeMutation } from "@/lib/redux/slices/agentApiSlice"; // We will add this mutation
-import { useUpdateJobMutation } from "@/lib/redux/slices/jobsApiSlice";
-import { Button } from "../ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Loader2, Wand2, Download } from "lucide-react";
-import { toast } from "sonner";
-import { UserDocument } from "@/lib/types";
-import { useSession } from "next-auth/react";
+import { useEffect, useState } from 'react';
+import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
+import { useRebuildResumeMutation } from '@/lib/redux/slices/agentApiSlice'; // We will add this mutation
+import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
+import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Loader2, Wand2, Download } from 'lucide-react';
+import { toast } from 'sonner';
+import { UserDocument } from '@/lib/types';
+import { useSession } from 'next-auth/react';
 
 interface AiResumeRebuilderProps { jobId: string; }
 
 export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
-    const [selectedResumeId, setSelectedResumeId] = useState<string>("");
+    const [selectedResumeId, setSelectedResumeId] = useState<string>('');
     
     const { data: resumes, isLoading: isLoadingResumes } = useGetDocumentsQuery('RESUME');
     const [rebuildResume, { data, isLoading: isRebuilding, error }] = useRebuildResumeMutation();
@@ -34,43 +34,43 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
 
     const handleRebuild = async () => {
         if (!selectedResumeId) {
-            toast.error("Please select a resume that has LaTeX source code.");
+            toast.error('Please select a resume that has LaTeX source code.');
             return;
         }
         
         try {
             const result = await rebuildResume({ jobId, resumeId: selectedResumeId }).unwrap();
-            toast.success("Resume rebuilt! Attaching it to this job application.");
+            toast.success('Resume rebuilt! Attaching it to this job application.');
             // Automatically attach the new resume to the job
             await updateJob({ id: jobId, resumeId: result.newDocument.id }).unwrap();
         } catch (err: any) {
-            const errorMessage = err.data?.message || "An unknown error occurred while rebuilding.";
+            const errorMessage = err.data?.message || 'An unknown error occurred while rebuilding.';
             toast.error(errorMessage);
         }
     };
 
     const handleDownload = async (doc: UserDocument) => {
         if (!session?.accessToken) {
-            toast.error("Authentication error.");
+            toast.error('Authentication error.');
             return;
         }
 
-        const toastId = toast.loading("Generating secure download link...");
+        const toastId = toast.loading('Generating secure download link...');
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${doc.id}/download-url`, {
-                headers: { 'Authorization': `Bearer ${session.accessToken}` }
+                headers: { 'Authorization': `Bearer ${session.accessToken}` },
             });
 
-            if (!res.ok) throw new Error("Could not get download link.");
+            if (!res.ok) throw new Error('Could not get download link.');
 
             const { url } = await res.json();
             
             // Trigger the download by opening the secure URL in a new tab
             window.open(url, '_blank');
-            toast.success("Download started!", { id: toastId });
+            toast.success('Download started!', { id: toastId });
 
         } catch (error) {
-            toast.error("Failed to generate download link.", { id: toastId });
+            toast.error('Failed to generate download link.', { id: toastId });
         }
     };
 
@@ -83,7 +83,7 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
             <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Select value={selectedResumeId} onValueChange={setSelectedResumeId} disabled={isLoadingResumes || !resumesWithLatex || resumesWithLatex.length === 0}>
                     <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={isLoadingResumes ? "Loading resumes..." : "Select resume with LaTeX"}/>
+                        <SelectValue placeholder={isLoadingResumes ? 'Loading resumes...' : 'Select resume with LaTeX'}/>
                     </SelectTrigger>
                     <SelectContent>
                         {!resumesWithLatex || resumesWithLatex.length === 0 ? (

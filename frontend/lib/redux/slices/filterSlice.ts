@@ -45,8 +45,8 @@ const filterSlice = createSlice({
             state.status = 'ALL';
             state.salaryMin = '';
             state.salaryMax = '';
-        }
-    }
+        },
+    },
 });
 
 export const { 
@@ -55,7 +55,7 @@ export const {
     setDateRange, 
     setStatus, 
     setSalaryRange, 
-    clearFilters 
+    clearFilters, 
 } = filterSlice.actions;
 
 export default filterSlice.reducer;

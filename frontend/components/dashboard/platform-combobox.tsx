@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
 import { useGetPlatformsQuery } from '@/lib/redux/slices/platformApiSlice';
@@ -10,7 +10,7 @@ import { Check, ChevronsUpDown, PlusCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 
-const PREDEFINED_PLATFORMS = ["LinkedIn", "Naukri", "Internshala", "Cuvette", "Wellfound", "Instahyre", "Indeed", "Company Website", "Referral"];
+const PREDEFINED_PLATFORMS = ['LinkedIn', 'Naukri', 'Internshala', 'Cuvette', 'Wellfound', 'Instahyre', 'Indeed', 'Company Website', 'Referral'];
 
 interface PlatformComboboxProps {
     value: string | null;
@@ -21,7 +21,7 @@ export function PlatformCombobox({ value, onChange }: PlatformComboboxProps) {
     const { data: session } = useSession();
     const isGuest = !session;
     const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState('');
     const debouncedSetSearch = useDebouncedCallback(setSearch, 300);
 
     const { data: fetchedPlatforms, isLoading } = useGetPlatformsQuery(search, {
@@ -31,14 +31,14 @@ export function PlatformCombobox({ value, onChange }: PlatformComboboxProps) {
     const handleSelect = (newValue: string | null) => {
         onChange(newValue);
         setOpen(false);
-        setSearch("");
+        setSearch('');
     };
 
     // Combine predefined platforms with fetched platforms, removing duplicates
     const allPlatforms = new Set([...PREDEFINED_PLATFORMS, ...(fetchedPlatforms?.map(p => p.name) || [])]);
     const platformList = Array.from(allPlatforms).sort();
 
-    const currentPlatform = value || "Select platform...";
+    const currentPlatform = value || 'Select platform...';
     const showAddOption = search && !platformList.some(p => p.toLowerCase() === search.toLowerCase());
 
     return (
@@ -61,7 +61,7 @@ export function PlatformCombobox({ value, onChange }: PlatformComboboxProps) {
                         <CommandEmpty>
                             {showAddOption ? (
                                 <CommandItem onSelect={() => handleSelect(search)} className="cursor-pointer">
-                                    <PlusCircle className="mr-2 h-4 w-4"/> Add: "{search}"
+                                    <PlusCircle className="mr-2 h-4 w-4"/> Add: &quot;{search}&quot;
                                 </CommandItem>
                             ) : (
                                 <div className="p-2 text-center text-sm">No platform found.</div>
@@ -75,7 +75,7 @@ export function PlatformCombobox({ value, onChange }: PlatformComboboxProps) {
                                     value={platform}
                                     onSelect={() => handleSelect(platform)}
                                 >
-                                    <Check className={cn("mr-2 h-4 w-4", value === platform ? "opacity-100" : "opacity-0")} />
+                                    <Check className={cn('mr-2 h-4 w-4', value === platform ? 'opacity-100' : 'opacity-0')} />
                                     {platform}
                                 </CommandItem>
                             ))}

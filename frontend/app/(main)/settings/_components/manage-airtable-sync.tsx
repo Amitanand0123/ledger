@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useUpdateAirtableSettingsMutation, useSyncToAirtableMutation } from "@/lib/redux/slices/userApiSlice"; // We will add these
-import { toast } from "sonner";
-import { Loader2, Zap } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useUpdateAirtableSettingsMutation, useSyncToAirtableMutation } from '@/lib/redux/slices/userApiSlice'; // We will add these
+import { toast } from 'sonner';
+import { Loader2, Zap } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 const airtableSettingsSchema = z.object({
-    apiKey: z.string().startsWith('pat', "Must be a Personal Access Token starting with 'pat'"),
-    baseId: z.string().startsWith('app', "Must be a Base ID starting with 'app'"),
-    tableName: z.string().min(1, "Table name is required."),
+    apiKey: z.string().startsWith('pat', 'Must be a Personal Access Token starting with \'pat\''),
+    baseId: z.string().startsWith('app', 'Must be a Base ID starting with \'app\''),
+    tableName: z.string().min(1, 'Table name is required.'),
 });
 
 type AirtableSettingsValues = z.infer<typeof airtableSettingsSchema>;
@@ -34,7 +34,7 @@ export function ManageAirtableSync() {
         toast.promise(updateSettings(data).unwrap(), {
             loading: 'Saving settings...',
             success: 'Airtable settings saved!',
-            error: (err) => err.data?.message || 'Failed to save settings.'
+            error: (err) => err.data?.message || 'Failed to save settings.',
         });
     };
 
@@ -42,7 +42,7 @@ export function ManageAirtableSync() {
         toast.promise(syncNow().unwrap(), {
             loading: 'Syncing jobs to Airtable...',
             success: (res) => res.message,
-            error: (err) => err.data?.message || 'Sync failed. Check your settings and table columns.'
+            error: (err) => err.data?.message || 'Sync failed. Check your settings and table columns.',
         });
     };
 
@@ -52,7 +52,7 @@ export function ManageAirtableSync() {
                 <CardTitle>Airtable Sync</CardTitle>
                 <CardDescription>
                     Connect your Airtable account to sync your job board. Ensure your Airtable table has columns like: 
-                    'Company', 'Position', 'Status', etc.
+                    &apos;Company&apos;, &apos;Position&apos;, &apos;Status&apos;, etc.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

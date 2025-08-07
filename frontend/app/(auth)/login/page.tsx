@@ -4,7 +4,7 @@ import { Package2 } from 'lucide-react';
 import { Suspense } from 'react';
 
 function LoginPageContent() {
-    return <LoginForm />
+    return <LoginForm />;
 }
 
 export default function LoginPage() {

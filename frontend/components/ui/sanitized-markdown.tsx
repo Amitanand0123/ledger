@@ -59,7 +59,7 @@ export function SanitizedHtml({ content, className }: { content: string, classNa
         // Render markdown to HTML first (if it's markdown)
         // For simplicity, assuming the content is already HTML or plain text from our AI
         return {
-            __html: DOMPurify.sanitize(content)
+            __html: DOMPurify.sanitize(content),
         };
     }, [content]);
 

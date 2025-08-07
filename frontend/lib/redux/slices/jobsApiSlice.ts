@@ -66,7 +66,7 @@ export const jobsApiSlice = createApi({
         query: ({ jobId, resumeId }) => ({
             url: `jobs/${jobId}/match-analysis`,
             method: 'POST',
-            body: { resumeId }
+            body: { resumeId },
         }),
     }),
     findSimilarJobs: builder.query<JobApplication[], string>({

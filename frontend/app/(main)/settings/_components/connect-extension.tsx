@@ -1,39 +1,39 @@
-'use client'
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
-import { Link2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+import { Link2 } from 'lucide-react';
 
 // This ID MUST match the ID of your extension after you load it in Chrome
-const EXTENSION_ID = "YOUR_CHROME_EXTENSION_ID_HERE";
+const EXTENSION_ID = 'YOUR_CHROME_EXTENSION_ID_HERE';
 
 export function ConnectExtension() {
     const { data: session } = useSession();
 
     const handleConnect = () => {
         if (!session?.accessToken) {
-            toast.error("You must be logged in to connect the extension.");
+            toast.error('You must be logged in to connect the extension.');
             return;
         }
 
         if (window.chrome && window.chrome.runtime) {
             chrome.runtime.sendMessage(EXTENSION_ID, {
                 type: 'SET_LEDGER_TOKEN',
-                token: session.accessToken
+                token: session.accessToken,
             }, (response: { success: boolean } | undefined) => {
                 if (chrome.runtime.lastError) {
-                    toast.error("Could not connect. Is the Ledger extension installed and enabled?");
+                    toast.error('Could not connect. Is the Ledger extension installed and enabled?');
                     console.error(chrome.runtime.lastError);
                 } else if (response && response.success) {
-                    toast.success("Extension connected successfully!");
+                    toast.success('Extension connected successfully!');
                 } else {
-                    toast.warning("Connection sent, but no confirmation received from the extension.");
+                    toast.warning('Connection sent, but no confirmation received from the extension.');
                 }
             });
         } else {
-            toast.error("This feature is only available in a Chrome browser with the extension installed.");
+            toast.error('This feature is only available in a Chrome browser with the extension installed.');
         }
     };
 

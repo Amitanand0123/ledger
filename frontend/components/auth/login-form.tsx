@@ -6,9 +6,9 @@ import * as z from 'zod';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { loginSchema } from '@/lib/validations';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,14 +36,14 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password. Please try again.");
+        toast.error('Invalid email or password. Please try again.');
       } else if (result?.ok) {
-        toast.success("Login successful! Redirecting...");
+        toast.success('Login successful! Redirecting...');
         router.push(result.url || '/');
         router.refresh();
       }
     } catch (_err) {
-      toast.error("An unexpected error occurred during login.");
+      toast.error('An unexpected error occurred during login.');
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export function LoginForm() {
   const handleGoogleSignIn = async () => {
       setIsGoogleLoading(true);
       await signIn('google', { callbackUrl: searchParams?.get('from') || '/' });
-  }
+  };
 
   return (
     <div className="space-y-4">

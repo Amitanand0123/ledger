@@ -49,7 +49,7 @@ const guestJobsSlice = createSlice({
         deleteGuestJob: (state, action: PayloadAction<string>) => {
             state.jobs = state.jobs.filter(job => job.id !== action.payload);
         },
-    }
+    },
 });
 
 export const { addGuestJob, updateGuestJob, deleteGuestJob } = guestJobsSlice.actions;

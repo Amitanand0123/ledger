@@ -1,8 +1,8 @@
 'use-client';
 
-import { useFindSimilarJobsQuery } from "@/lib/redux/slices/jobsApiSlice";
-import { Loader2, Telescope } from "lucide-react";
-import { JobApplication } from "@/lib/types";
+import { useFindSimilarJobsQuery } from '@/lib/redux/slices/jobsApiSlice';
+import { Loader2, Telescope } from 'lucide-react';
+import { JobApplication } from '@/lib/types';
 
 // A compact card to show similar job results
 function SimilarJobCard({ job }: { job: JobApplication }) {
@@ -11,7 +11,7 @@ function SimilarJobCard({ job }: { job: JobApplication }) {
             <p className="font-semibold text-sm">{job.company}</p>
             <p className="text-xs text-muted-foreground">{job.position}</p>
         </div>
-    )
+    );
 }
 
 export function SimilarJobs({ jobId }: { jobId: string }) {
@@ -32,5 +32,5 @@ export function SimilarJobs({ jobId }: { jobId: string }) {
                 </div>
             )}
         </div>
-    )
+    );
 }

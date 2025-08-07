@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import Link from "next/link"
+import Link from 'next/link';
 import {
   CircleUser,
   Home,
@@ -9,9 +9,9 @@ import {
   Settings,
   BarChart3,
   LogIn,
-  LogOut
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+  LogOut,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,31 +19,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { signOut, useSession } from "next-auth/react"
-import { toast } from "sonner"
+} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { signOut, useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
-import { AddJobButton } from "../dashboard/add-job-button"
-import { ThemeToggle } from "./theme-toggle"
-import { NavLink } from "./nav-link"
-import { Sidebar } from "./sidebar"
+import { AddJobButton } from '../dashboard/add-job-button';
+import { ThemeToggle } from './theme-toggle';
+import { NavLink } from './nav-link';
+import { Sidebar } from './sidebar';
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const isGuest = status === 'unauthenticated';
 
   const handleLogout = () => {
-    toast("Are you sure you want to log out?", {
+    toast('Are you sure you want to log out?', {
         action: {
-            label: "Logout",
+            label: 'Logout',
             onClick: () => signOut({ callbackUrl: '/' }),
         },
         cancel: {
-            label: "Cancel",
+            label: 'Cancel',
             onClick: () => toast.dismiss(),
-        }
-    })
+        },
+    });
   };
 
   return (
@@ -109,5 +109,5 @@ export function Navbar() {
         )}
       </div>
     </header>
-  )
+  );
 }

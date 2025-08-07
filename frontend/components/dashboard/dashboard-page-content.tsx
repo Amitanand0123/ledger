@@ -46,7 +46,7 @@ export function DashboardPageContent() {
   useEffect(() => {
     if (socket) {
       const handleJobsUpdate = () => {
-        toast.info("Your job board has been updated.");
+        toast.info('Your job board has been updated.');
         // Invalidate the 'LIST' tag for the 'Job' type, forcing RTK Query to refetch jobs.
         dispatch(jobsApiSlice.util.invalidateTags([{ type: 'Job', id: 'LIST' }]));
       };
@@ -60,14 +60,15 @@ export function DashboardPageContent() {
   }, [socket, dispatch]);
 
 
-  const jobs = isGuest ? guestJobs : (apiJobs || []);
+  
   const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
 
   const filteredAndSortedJobs = useMemo(() => {
     // Backend handles filtering for authenticated users.
     // For guest users, we could add client-side filtering here if needed.
+    const jobs = isGuest ? guestJobs : (apiJobs || []);
     return [...jobs].sort((a, b) => a.order - b.order);
-  }, [jobs]);
+  }, [isGuest, guestJobs, apiJobs]);
   
   useEffect(() => {
     const isIndeterminate = selectedJobIds.size > 0 && selectedJobIds.size < filteredAndSortedJobs.length;

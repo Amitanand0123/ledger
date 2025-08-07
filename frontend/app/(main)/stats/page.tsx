@@ -1,12 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useSession } from "next-auth/react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useSession } from 'next-auth/react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, PieLabelRenderProps } from 'recharts';
-import { Loader2, TrendingUp, CalendarDays, Percent, Clock } from "lucide-react";
-import { StatCard } from "@/components/stats/StatCard";
-import { useGetStatsQuery } from "@/lib/redux/slices/statsApiSlice";
-import { useGetAdvancedStatsQuery } from "@/lib/redux/slices/userApiSlice";
+import { Loader2, TrendingUp, CalendarDays, Percent, Clock } from 'lucide-react';
+import { StatCard } from '@/components/stats/StatCard';
+import { useGetStatsQuery } from '@/lib/redux/slices/statsApiSlice';
+import { useGetAdvancedStatsQuery } from '@/lib/redux/slices/userApiSlice';
 
 const COLORS = ['#8DBCC7', '#A4CCD9', '#EBFFD8', '#C4E1E6', '#a3a3a3', '#f87171'];
 
@@ -79,7 +79,7 @@ export default function StatsPage() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                                <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} />
+                                <Tooltip contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                                 <Bar dataKey="count" fill="#8DBCC7" radius={[4, 4, 0, 0]} name="Applications" />
                             </BarChart>
                         </ResponsiveContainer>
@@ -99,7 +99,7 @@ export default function StatsPage() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} />
+                                <Tooltip contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>

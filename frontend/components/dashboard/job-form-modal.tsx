@@ -43,7 +43,7 @@ export function JobFormModal() {
       company: '', position: '', location: '', salary: '', url: '',
       description: '', status: 'PENDING', platformName: '',
       resumeId: undefined, coverLetterId: undefined,
-    }
+    },
   });
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function JobFormModal() {
   const onSubmit = async (data: JobFormValues) => {
     if (isGuest) {
       dispatch(addGuestJob(data as any));
-      toast.success("Demo job added!");
+      toast.success('Demo job added!');
       handleClose();
       return;
     }
@@ -84,7 +84,7 @@ export function JobFormModal() {
         handleClose();
         return `Application for ${result.company} has been ${editingJob ? 'updated' : 'saved'}!`;
       },
-      error: (err) => err.data?.message || 'An error occurred. Please try again.'
+      error: (err) => err.data?.message || 'An error occurred. Please try again.',
     });
   };
 

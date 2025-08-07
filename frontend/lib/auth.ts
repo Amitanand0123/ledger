@@ -21,8 +21,8 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials) return null;
@@ -30,22 +30,22 @@ export const authOptions: NextAuthOptions = {
           const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
             method: 'POST',
             body: JSON.stringify({ email: credentials.email, password: credentials.password }),
-            headers: { "Content-Type": "application/json" }
+            headers: { 'Content-Type': 'application/json' },
           });
           if (!res.ok) return null;
           const user = await res.json();
           if (user && user.token) return user;
           return null;
         } catch (error) {
-          console.error("Authorize error:", error);
+          console.error('Authorize error:', error);
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
 
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
   
   pages: {
@@ -69,8 +69,8 @@ export const authOptions: NextAuthOptions = {
               name: user.name,
               email: user.email,
               provider: 'google',
-              providerAccountId: user.id
-            })
+              providerAccountId: user.id,
+            }),
           });
 
           if (!res.ok) {
@@ -130,5 +130,5 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-  }
+  },
 };

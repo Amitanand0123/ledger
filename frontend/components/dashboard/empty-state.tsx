@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { openJobFormModal, setEditingJob } from "@/lib/redux/slices/uiSlice";
-import { FilePlus2, PlusCircle } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { useAppDispatch } from '@/lib/redux/hooks';
+import { openJobFormModal, setEditingJob } from '@/lib/redux/slices/uiSlice';
+import { FilePlus2, PlusCircle } from 'lucide-react';
 
 interface EmptyStateProps {
     isFiltered: boolean;
@@ -17,12 +17,12 @@ export function EmptyState({ isFiltered, isGuest }: EmptyStateProps) {
         dispatch(openJobFormModal());
     };
 
-    const title = isFiltered ? "No Jobs Found" : "Your Job Board is Empty";
+    const title = isFiltered ? 'No Jobs Found' : 'Your Job Board is Empty';
     const description = isFiltered 
-        ? "Try adjusting your search or filter criteria to find what you're looking for."
+        ? 'Try adjusting your search or filter criteria to find what you\'re looking for.'
         : isGuest
-        ? "Welcome! Add a demo job application to see how it works. Your data won't be saved unless you sign up."
-        : "Let's get started! Add your first job application to begin tracking your journey.";
+        ? 'Welcome! Add a demo job application to see how it works. Your data won\'t be saved unless you sign up.'
+        : 'Let\'s get started! Add your first job application to begin tracking your journey.';
 
     return (
         <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm m-4">
