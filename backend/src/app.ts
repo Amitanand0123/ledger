@@ -10,12 +10,8 @@ const app: Express = express();
 
 const CHROME_EXTENSION_ID = "YOUR_CHROME_EXTENSION_ID_HERE";
 
-// --- Security & Core Middleware ---
-
-// Set security-related HTTP headers
 app.use(helmet());
 
-// Enable CORS for the client application
 app.use(
     cors({
         origin: [
@@ -33,34 +29,24 @@ app.use(
     })
 );
 
-// Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Rate Limiting ---
-// Apply to all API routes to prevent abuse
 app.set('trust proxy', 1);
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per window
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use('/api/', apiLimiter);
 
-// --- Routes ---
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).send('Web service is alive');
+});
 
-// Simple health check route
-const healthHandler: RequestHandler = (req, res) => {
-    res.status(200).send('OK');
-};
-app.get('/health', healthHandler);
- 
-// Main API routes
 app.use('/api/v1', apiRoutes);
 
-// --- Error Handling ---
-// This should be the last middleware
 app.use(errorHandler);
 
 export default app;
