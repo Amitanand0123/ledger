@@ -82,12 +82,13 @@ export const invokeAgent = async (userId: string, resumeId: string, jobId: strin
     });
 
     if (!response.ok) {
-        let errorDetail = 'An unknown error occurred in the AI service.';
+        const errorText = await response.text();
+        let errorDetail = errorText;
         try {
-            const errorBody = await response.json();
+            const errorBody = JSON.parse(errorText);
             errorDetail = errorBody.detail || JSON.stringify(errorBody);
         } catch (e) {
-            errorDetail = await response.text();
+            
         }
         logger.error("AI Agent Invocation Failed:", errorDetail);
         throw new ApiError(502, `The AI agent failed to generate advice: ${errorDetail}`);
