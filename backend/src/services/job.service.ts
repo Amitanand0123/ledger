@@ -141,14 +141,29 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
         delete data.description;
     }
 
-    const { platformName, ...restOfData } = data;
+    const { platformName, resumeId, coverLetterId, ...restOfData } = data;
     const updateData: Prisma.JobApplicationUpdateInput = { ...restOfData };
     
+    // Transform platformName into a relational connect object
     if (platformName) {
         const platform = await createPlatform(platformName);
         updateData.platform = { connect: { id: platform.id } };
     } else if (platformName === '' || platformName === null) { 
         updateData.platform = { disconnect: true };
+    }
+
+    // Transform resumeId into a relational connect/disconnect object
+    if (resumeId) {
+        updateData.resume = { connect: { id: resumeId } };
+    } else if (resumeId === null) { // This handles un-setting the resume
+        updateData.resume = { disconnect: true };
+    }
+
+    // Transform coverLetterId into a relational connect/disconnect object
+    if (coverLetterId) {
+        updateData.coverLetter = { connect: { id: coverLetterId } };
+    } else if (coverLetterId === null) { // This handles un-setting the cover letter
+        updateData.coverLetter = { disconnect: true };
     }
 
     if (data.salary) {
