@@ -1,0 +1,16 @@
+name: Keep AI Service Alive
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '*/13 * * * *'
+
+jobs:
+  ping:
+    name: Ping Render AI Service
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send GET request to AI service
+        run: curl --fail --silent --show-error --output /dev/null "https://ledger-ai-service.onrender.com/health"
