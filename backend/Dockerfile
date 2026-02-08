@@ -1,54 +1,35 @@
-# backend/Dockerfile
+# File: backend/Dockerfile
 
-# --- Stage 1: Build Stage ---
+# --- Builder Stage: Installs all dependencies and builds the project ---
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
-# Copy root package files
 COPY package.json package-lock.json ./
-
-# Copy workspace package files
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
-COPY worker/package.json ./worker/
 
-# Install all dependencies for the monorepo
-RUN npm run install:all
+RUN npm ci
 
-# Copy the entire monorepo context
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate --schema=./backend/prisma/schema.prisma
-
-# Build the backend workspace
 RUN npm run build --workspace=backend
-
-# Prune development dependencies
+# Remove development dependencies to create a lean production image
 RUN npm prune --production
 
-
-# --- Stage 2: Production Stage ---
+# --- Production Stage: Copies only the necessary built files ---
 FROM node:20-alpine
-
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
 
-# Copy pruned node_modules from the builder stage
+# Copy pruned dependencies and built code from the builder stage
 COPY --from=builder /app/node_modules ./node_modules
+# Some packages might be in the workspace node_modules, copy that too
 COPY --from=builder /app/backend/node_modules ./backend/node_modules
-
-# Copy the built backend application from the builder stage
 COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend/package.json ./backend/package.json
+COPY --from=builder /app/package.json ./package.json
 
-# Copy the Prisma schema needed for runtime
-COPY --from=builder /app/backend/prisma/schema.prisma ./backend/prisma/schema.prisma
-
-# Expose the port the app runs on
 EXPOSE 5000
-
-# Command to run the application
-CMD [ "node", "--es-module-specifier-resolution=node", "backend/dist/server.js" ]
+# The production start command
+CMD [ "npm", "run", "start", "--workspace=backend" ]

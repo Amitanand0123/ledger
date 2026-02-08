@@ -30,7 +30,7 @@ export function EmptyState({ isFiltered, isGuest }: EmptyStateProps) {
                 <FilePlus2 className="h-12 w-12 text-muted-foreground" />
                 <h3 className="text-2xl font-bold tracking-tight">{title}</h3>
                 <p className="max-w-md text-sm text-muted-foreground">{description}</p>
-                <Button className="mt-4 bg-brand-primary hover:bg-brand-secondary text-black" onClick={handleAddJobClick}>
+                <Button className="mt-4 bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg" onClick={handleAddJobClick}>
                     <PlusCircle className="mr-2 h-4 w-4"/> Add Job Application
                 </Button>
             </div>

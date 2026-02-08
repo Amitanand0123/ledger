@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, getSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,53 +31,73 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
             toast.error('Please select a file to upload.');
             return;
         }
-        if (!session) {
-            toast.error('Authentication error. Please log in again.');
-            return;
-        }
-        
+
         setIsUploading(true);
 
         try {
-            // Step 1: Get a presigned URL from our backend
+            // Get fresh session to ensure we have a valid token
+            const currentSession = await getSession();
+
+            if (!currentSession?.accessToken) {
+                toast.error('Session expired. Please log in again.');
+                setIsUploading(false);
+                return;
+            }
+
+            // Get presigned URL
             const presignedUrlRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/uploads/presigned-url`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${session.accessToken}`, 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentSession.accessToken}`,
                 },
                 body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type }),
             });
-            if (!presignedUrlRes.ok) throw new Error('Could not get an upload URL from the server.');
-            const { signedUrl, key } = await presignedUrlRes.json();
 
-            // Step 2: Upload the file directly to S3 using the presigned URL
-            const s3UploadRes = await fetch(signedUrl, { method: 'PUT', body: selectedFile });
-            if (!s3UploadRes.ok) throw new Error('File upload to storage failed.');
+            if (!presignedUrlRes.ok) {
+                throw new Error('Could not get an upload URL from the server.');
+            }
 
-            // Step 3: Create the document record in our database
+            const presignedData = await presignedUrlRes.json();
+            const { signedUrl, key } = presignedData.data || presignedData;
+
+            // Upload to S3 with the correct Content-Type header
+            const s3UploadRes = await fetch(signedUrl, {
+                method: 'PUT',
+                body: selectedFile,
+                headers: {
+                    'Content-Type': selectedFile.type,
+                },
+            });
+            if (!s3UploadRes.ok) {
+                throw new Error('File upload to storage failed.');
+            }
+            // Create document record
             const docCreateBody: {
                 filename: string;
                 fileKey: string;
                 type: 'RESUME' | 'COVER_LETTER';
                 latexSource?: string;
-            } = { 
-                filename: selectedFile.name, 
-                fileKey: key, 
+            } = {
+                filename: selectedFile.name,
+                fileKey: key,
                 type,
                 ...(type === 'RESUME' && latexSource && { latexSource: latexSource }),
             };
-            
+
             const docCreateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${session.accessToken}`, 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentSession.accessToken}`,
                 },
                 body: JSON.stringify(docCreateBody),
             });
-            if (!docCreateRes.ok) throw new Error('Failed to save the document record.');
-            
+
+            if (!docCreateRes.ok) {
+                throw new Error('Failed to save the document record.');
+            }
+
             toast.success(`File "${selectedFile.name}" uploaded successfully!`);
             onUploadComplete();
 

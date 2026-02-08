@@ -34,6 +34,7 @@ export const agentApiSlice = createApi({
         method: 'POST',
         body,
       }),
+      transformResponse: (response: { success: boolean; data: AgentResponse }) => response.data,
     }),
     rebuildResume: builder.mutation<RebuildResponse, { jobId: string; resumeId: string }>({
         query: (body) => ({
@@ -41,6 +42,7 @@ export const agentApiSlice = createApi({
             method: 'POST',
             body,
         }),
+        transformResponse: (response: { success: boolean; data: RebuildResponse }) => response.data,
     }),
   }),
 });

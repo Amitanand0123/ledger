@@ -10,21 +10,28 @@ import {
     findSimilarJobs
 } from '../../controllers/jobs.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
+import { validate } from '../../middleware/validate.middleware.js';
+import {
+    createJobSchema,
+    updateJobSchema,
+    getJobSchema,
+    deleteJobSchema,
+} from '../../validation/job.schemas.js';
 
 const router = Router();
 router.use(protect);
 
 router.route('/')
     .get(getJobApplications)
-    .post(createJobApplication)
-    .delete(deleteBulkJobs); // Route for bulk deletion
+    .post(validate(createJobSchema), createJobApplication)
+    .delete(deleteBulkJobs);
 
 router.route('/:id')
-    .get(getJobApplicationById)
-    .put(updateJobApplication)
-    .delete(deleteJobApplication);
+    .get(validate(getJobSchema), getJobApplicationById)
+    .put(validate(updateJobSchema), updateJobApplication)
+    .delete(validate(deleteJobSchema), deleteJobApplication);
 
-router.post('/:id/match-analysis', analyzeJobMatch); 
+router.post('/:id/match-analysis', analyzeJobMatch);
 router.route('/:id/similar').get(findSimilarJobs);
 
 export default router;

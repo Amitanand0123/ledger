@@ -1,28 +1,35 @@
-import { prisma } from '../config/db.js';
+import { db } from '../db/client.js';
+import { jobPlatforms } from '../db/schema/index.js';
+import { ilike, asc, eq } from 'drizzle-orm';
 
-export const findPlatforms = (searchTerm?: string) => {
-    return prisma.jobPlatform.findMany({
-        where: {
-            name: {
-                contains: searchTerm,
-                mode: 'insensitive',
-            },
-        },
-        orderBy: { name: 'asc' },
-        take: 10, // Limit results for performance
-    });
+export const findPlatforms = async (searchTerm?: string) => {
+    if (!searchTerm) {
+        return db.select().from(jobPlatforms).orderBy(asc(jobPlatforms.name)).limit(10);
+    }
+
+    return db
+        .select()
+        .from(jobPlatforms)
+        .where(ilike(jobPlatforms.name, `%${searchTerm}%`))
+        .orderBy(asc(jobPlatforms.name))
+        .limit(10);
 };
 
 export const createPlatform = async (name: string) => {
-    // Check if it already exists to avoid race conditions, though the unique constraint helps
-    const existingPlatform = await prisma.jobPlatform.findUnique({
-        where: { name },
-    });
+    const [existingPlatform] = await db
+        .select()
+        .from(jobPlatforms)
+        .where(eq(jobPlatforms.name, name))
+        .limit(1);
+
     if (existingPlatform) {
         return existingPlatform;
     }
 
-    return prisma.jobPlatform.create({
-        data: { name },
-    });
+    const [newPlatform] = await db
+        .insert(jobPlatforms)
+        .values({ name })
+        .returning();
+
+    return newPlatform;
 };

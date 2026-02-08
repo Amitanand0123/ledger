@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Start seeding process...');
 
-    // --- Seed Job Platforms ---
     console.log('Seeding job platforms...');
     await prisma.jobPlatform.createMany({
         data: [
@@ -18,11 +17,10 @@ async function main() {
             { name: 'Referral' },
             { name: 'Other' },
         ],
-        skipDuplicates: true, // Don't throw an error if a platform already exists
+        skipDuplicates: true,
     });
     console.log('Platforms seeded successfully.');
 
-    // --- Seed a Test User ---
     console.log('Seeding test user...');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
@@ -38,7 +36,6 @@ async function main() {
     });
     console.log(`Test user "${testUser.name}" seeded with id: ${testUser.id}`);
 
-    // --- Seed a Personal Job Board for the Test User ---
     console.log(`Seeding job applications for ${testUser.name}...`);
     const linkedInPlatform = await prisma.jobPlatform.findUnique({
         where: { name: 'LinkedIn' },

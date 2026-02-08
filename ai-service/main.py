@@ -1,80 +1,67 @@
 import os
+import json
+import re
 import tempfile
 import subprocess
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_pinecone import PineconeVectorStore
-from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
-from langchain_core.prompts import PromptTemplate
-from typing import TypedDict, List
-from langgraph.graph import StateGraph, END
+from typing import List
 from dotenv import load_dotenv
-from langchain_huggingface import HuggingFaceEmbeddings
+from google import genai
 
 load_dotenv()
 
-# --- Configuration & Models ---
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+# --- Configuration ---
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 AI_SERVICE_API_KEY = os.getenv("AI_SERVICE_API_KEY")
-INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "ledger") 
 
-if not PINECONE_API_KEY or not AI_SERVICE_API_KEY or not INDEX_NAME:
-    raise ValueError("Missing critical environment variables: PINECONE_API_KEY, AI_SERVICE_API_KEY, INDEX_NAME")
+if not GOOGLE_API_KEY or not AI_SERVICE_API_KEY:
+    raise ValueError("Missing required environment variables: GOOGLE_API_KEY and AI_SERVICE_API_KEY")
 
-app = FastAPI(title="JobTracker Advanced AI Agent")
+client = genai.Client(api_key=GOOGLE_API_KEY)
+MODEL = "gemini-2.5-flash"
+
+app = FastAPI(title="JobTracker AI Service")
 security = HTTPBearer()
 
-# Models
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2") # Runs locally, fast!
-vectorstore = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
 
-# --- Security ---
+# --- Auth ---
 def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
     if credentials.scheme != "Bearer" or credentials.credentials != AI_SERVICE_API_KEY:
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
     return True
 
-# --- Pydantic Models for API and LangChain Parsing ---
 
-# --- NEW: Pydantic model for structured resume analysis ---
-class ResumeAnalysis(BaseModel):
-    skills: List[str] = Field(description="A list of the top 5-7 most relevant skills, technologies, or qualifications found in the resume.")
-    summary: str = Field(description="A concise 2-3 sentence professional summary of the candidate based on the resume.")
-
-# --- MODIFIED: Added user_id for multi-tenancy ---
+# --- Pydantic Models ---
 class EmbedJobRequest(BaseModel):
     job_id: str
-    user_id: str # To associate the vector with a user
-    job_description: str
-
-# --- MODIFIED: Added user_id for multi-tenancy ---
-class AgentRequest(BaseModel):
     user_id: str
-    resume_text: str
     job_description: str
-    user_goal: str
-
-# --- LangGraph State & Nodes ---
-class AgentState(TypedDict):
-    request: AgentRequest
-    resume_analysis: ResumeAnalysis # --- MODIFIED: Use the structured Pydantic model
-    similar_jobs: List[str]
-    final_recommendation: str
 
 class FindSimilarRequest(BaseModel):
     job_id: str
-    user_id: str
     job_description: str
+    user_id: str = ""
 
 class SimilarJob(BaseModel):
     id: str
     description: str
     score: float
+
+class AnalyzeResumeRequest(BaseModel):
+    resume_text: str
+
+class MatchResumeRequest(BaseModel):
+    resume_analysis: dict
+    job_description_text: str
+
+class MatchResponse(BaseModel):
+    match_score: float = Field(description="Match percentage between 0-100")
+    matching_skills: List[str] = Field(description="Skills that match the job requirements")
+    missing_skills: List[str] = Field(description="Skills required by job but missing from resume")
+    suggestions: str = Field(description="Actionable suggestions to improve match")
 
 class RebuildLatexRequest(BaseModel):
     latex_source: str
@@ -83,203 +70,222 @@ class RebuildLatexRequest(BaseModel):
 class CompileLatexRequest(BaseModel):
     latex_source: str
 
-# --- NEW: Un-mocked resume analysis node ---
-def analyze_resume_node(state: AgentState):
-    """Node to analyze the initial resume and extract structured data."""
-    print("--- 1. Analyzing Resume ---")
-    parser = JsonOutputParser(pydantic_object=ResumeAnalysis)
-    
-    prompt = PromptTemplate(
-        template="You are an expert HR analyst. Analyze the following resume text.\n{format_instructions}\nResume:\n{resume}",
-        input_variables=["resume"],
-        partial_variables={"format_instructions": parser.get_format_instructions()},
-    )
-    
-    chain = prompt | llm | parser
-    analysis_result = chain.invoke({"resume": state['request'].resume_text})
-    
-    state['resume_analysis'] = analysis_result
-    return state
+class AgentRequest(BaseModel):
+    user_id: str
+    resume_text: str
+    job_description: str
+    user_goal: str
 
-# --- MODIFIED: Added user_id filtering ---
-def find_similar_jobs_node(state: AgentState):
-    """Node to find similar jobs from Pinecone to provide context, scoped to the user."""
-    print("--- 2. Finding Similar Jobs ---")
-    req = state['request']
-    
-    # Use the user_id from the request to filter the search
-    similar_docs = vectorstore.similarity_search(
-        req.job_description,
-        k=3,
-        filter={"user_id": req.user_id} # CRITICAL: Multi-tenancy filter
-    )
-    state['similar_jobs'] = [doc.page_content for doc in similar_docs]
-    return state
 
-# --- MODIFIED: Improved prompt ---
-def generate_recommendation_node(state: AgentState):
-    """Final node to generate the tailored advice."""
-    print("--- 3. Generating Final Recommendation ---")
-    prompt = PromptTemplate.from_template("""You are a world-class career coach providing advice in a job tracking app.
-    A user wants to achieve this goal: "{user_goal}"
+# --- Gemini Helper ---
+async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
+    """Call Gemini and optionally parse the response as JSON."""
+    text = ""
+    try:
+        config = {"temperature": 0.4}
+        if expect_json:
+            config["response_mime_type"] = "application/json"
 
-    Here is the structured analysis of their resume:
-    - Key Skills Identified: {skills}
-    - Professional Summary: {summary}
-    
-    Here is the target job description they want to apply for:
-    ---
-    {job_description}
-    ---
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=config,
+        )
 
-    For added context, here are snippets from other similar jobs they have stored:
-    ---
-    {similar_jobs}
-    ---
+        text = response.text
 
-    Provide a concise, actionable, and step-by-step recommendation in Markdown format.
-    Focus on specific changes to their resume, highlighting which of their skills ({skills}) to emphasize,
-    and suggest how to bridge any gaps based on the target job description.
-    Keep the tone encouraging and professional.
-    """)
-    
-    chain = prompt | llm | StrOutputParser()
-    
-    response = chain.invoke({
-        "user_goal": state['request'].user_goal,
-        "skills": state['resume_analysis']['skills'],
-        "summary": state['resume_analysis']['summary'],
-        "job_description": state['request'].job_description,
-        "similar_jobs": "\n---\n".join(state['similar_jobs']) if state['similar_jobs'] else "None"
-    })
-    
-    state['final_recommendation'] = response
-    return state
-    
-# --- Define the Graph ---
-workflow = StateGraph(AgentState)
-workflow.add_node("analyze_resume", analyze_resume_node)
-workflow.add_node("find_similar_jobs", find_similar_jobs_node)
-workflow.add_node("generate_recommendation", generate_recommendation_node)
+        if expect_json:
+            return json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        # Fallback: try to extract JSON from markdown code blocks
+        json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+        if json_match:
+            return json.loads(json_match.group(1))
+        raise HTTPException(status_code=500, detail="Failed to parse AI response as JSON")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini API call failed: {str(e)}")
 
-workflow.set_entry_point("analyze_resume")
-workflow.add_edge("analyze_resume", "find_similar_jobs")
-workflow.add_edge("find_similar_jobs", "generate_recommendation")
-workflow.add_edge("generate_recommendation", END)
 
-agent_app = workflow.compile()
+# --- Endpoints ---
 
-# --- API Endpoints ---
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 
 @app.post("/embed-job")
 async def embed_job(request: EmbedJobRequest, authorized: bool = Security(verify_api_key)):
-    """Converts a job description to a vector and stores it in Pinecone with user_id metadata."""
-    vectorstore.add_texts(
-        texts=[request.job_description],
-        # --- MODIFIED: Add user_id to metadata ---
-        metadatas=[{"job_id": request.job_id, "user_id": request.user_id}],
-        ids=[request.job_id] # Use job_id as the unique vector ID
-    )
-    return {"message": "Job embedded successfully", "job_id": request.job_id}
+    """No-op: Vector DB removed. Returns success for backward compatibility."""
+    return {"message": "Job processed successfully", "job_id": request.job_id}
 
-@app.post("/agent/invoke")
-async def invoke_agent(request: AgentRequest, authorized: bool = Security(verify_api_key)):
-    """Invokes the full LangGraph agent to get career advice."""
-    inputs = {"request": request}
-    # The result will be the final state of the graph
-    result = agent_app.invoke(inputs)
-    return {"recommendation": result.get("final_recommendation")}
-
-@app.get("/health")
-def health_check(): return {"status": "ok"}
 
 @app.post("/find-similar-jobs", response_model=List[SimilarJob])
 async def find_similar_jobs(request: FindSimilarRequest, authorized: bool = Security(verify_api_key)):
-    """Finds jobs semantically similar to the provided description, scoped to the user."""
-    try:
-        similar_docs = vectorstore.similarity_search_with_score(
-            query=request.job_description,
-            k=5, # Find top 5 similar items
-            filter={"user_id": request.user_id} # CRITICAL: Ensure multi-tenancy
-        )
-        
-        results = []
-        for doc, score in similar_docs:
-            # Exclude the job itself from the results
-            if doc.metadata and doc.metadata.get("job_id") != request.job_id:
-                results.append(SimilarJob(
-                    id=doc.metadata.get("job_id"),
-                    description=doc.page_content,
-                    score=score
-                ))
-        # Return up to 3 results after filtering
-        return results[:3]
-    except Exception as e:
-        print(f"Error finding similar jobs: {e}")
-        raise HTTPException(status_code=500, detail="Could not perform similarity search.")
-    
+    """Returns empty list. Vector-based similarity search has been removed."""
+    return []
+
+
+@app.post("/analyze-resume")
+async def analyze_resume(request: AnalyzeResumeRequest, authorized: bool = Security(verify_api_key)):
+    """Analyzes a resume and extracts structured information (skills and summary)."""
+    prompt = f"""You are an expert HR analyst. Analyze the following resume text.
+
+Extract:
+1. "skills": A list of the top 5-7 most relevant skills, technologies, or qualifications found in the resume.
+2. "summary": A concise 2-3 sentence professional summary of the candidate based on the resume.
+
+Resume:
+{request.resume_text}
+
+Return a JSON object with exactly these two keys: "skills" (array of strings) and "summary" (string)."""
+
+    result = await call_gemini(prompt, expect_json=True)
+
+    return {
+        "skills": result.get("skills", []),
+        "summary": result.get("summary", ""),
+    }
+
+
+@app.post("/match-resume-to-job")
+async def match_resume_to_job(request: MatchResumeRequest, authorized: bool = Security(verify_api_key)):
+    """Matches a resume against a job description and provides detailed analysis."""
+    skills = request.resume_analysis.get("skills", [])
+    summary = request.resume_analysis.get("summary", "")
+
+    prompt = f"""You are an expert ATS (Applicant Tracking System) analyzer.
+Compare the resume against the job description.
+
+Resume Analysis:
+- Skills: {skills}
+- Summary: {summary}
+
+Job Description:
+---
+{request.job_description_text}
+---
+
+Analyze the match and return a JSON object with exactly these keys:
+- "match_score": A number between 0 and 100 indicating how well the resume matches the job
+- "matching_skills": Array of skills from the resume that match the job requirements
+- "missing_skills": Array of important skills mentioned in the job but missing from the resume
+- "suggestions": A string with specific, actionable recommendations to improve the match (2-3 sentences)"""
+
+    result = await call_gemini(prompt, expect_json=True)
+
+    return {
+        "match_score": result.get("match_score", 0),
+        "matching_skills": result.get("matching_skills", []),
+        "missing_skills": result.get("missing_skills", []),
+        "suggestions": result.get("suggestions", ""),
+    }
+
 
 @app.post("/rebuild-resume-latex")
 async def rebuild_resume_latex(request: RebuildLatexRequest, authorized: bool = Security(verify_api_key)):
-    """Uses an LLM to modify LaTeX resume content based on a job description."""
-    prompt = PromptTemplate.from_template("""You are an expert resume writer who is fluent in LaTeX.
+    """Uses Gemini to modify LaTeX resume content based on a job description."""
+    prompt = f"""You are an expert resume writer who is fluent in LaTeX.
 Your task is to rewrite the content of the provided LaTeX resume to be perfectly tailored for the given job description.
 
 **CRITICAL INSTRUCTIONS:**
-1.  **DO NOT** change the LaTeX structure, commands, formatting, document class, or layout. Preserve it exactly.
-2.  **ONLY** modify the text content within the resume, such as project descriptions, experience bullet points, and the professional summary.
-3.  Incorporate keywords from the job description naturally into the text.
-4.  Rewrite bullet points to highlight accomplishments and skills that are most relevant to the job description.
-5.  Your output **MUST** be only the raw, complete, modified LaTeX code. Do not add any explanations, apologies, or introductory text.
+1. **DO NOT** change the LaTeX structure, commands, formatting, document class, or layout. Preserve it exactly.
+2. **ONLY** modify the text content within the resume, such as project descriptions, experience bullet points, and the professional summary.
+3. Incorporate keywords from the job description naturally into the text.
+4. Rewrite bullet points to highlight accomplishments and skills that are most relevant to the job description.
+5. Your output **MUST** be only the raw, complete, modified LaTeX code. Do not add any explanations, apologies, or introductory text.
 
 **Job Description:**
 ---
-{job_description}
+{request.job_description}
 ---
 
 **Original LaTeX Resume Source:**
 ---
-{latex_source}
----
-    """)
-    
-    chain = prompt | llm | StrOutputParser()
-    modified_latex = chain.invoke({
-        "job_description": request.job_description,
-        "latex_source": request.latex_source
-    })
-    
+{request.latex_source}
+---"""
+
+    modified_latex = await call_gemini(prompt, expect_json=False)
+
+    # Strip markdown code fences if Gemini wraps the output
+    if modified_latex.startswith("```"):
+        lines = modified_latex.split("\n")
+        if lines[-1].strip() == "```":
+            lines = lines[1:-1]
+        else:
+            lines = lines[1:]
+        modified_latex = "\n".join(lines)
+
     return {"modified_latex": modified_latex}
+
 
 @app.post("/compile-latex-to-pdf")
 async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = Security(verify_api_key)):
-    """
-    Compiles a string of LaTeX code into a PDF file using pdflatex.
-    Requires a TeX Live distribution to be installed in the execution environment.
-    """
+    """Compiles LaTeX code into a PDF using pdflatex."""
     with tempfile.TemporaryDirectory() as tempdir:
         tex_path = os.path.join(tempdir, "resume.tex")
         pdf_path = os.path.join(tempdir, "resume.pdf")
-        
+
         with open(tex_path, "w") as f:
             f.write(request.latex_source)
-            
-        # Run pdflatex command. The -interaction=nonstopmode flag prevents it from pausing on errors.
-        # Running it twice is often necessary to resolve references correctly.
-        process = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode", "-output-directory", tempdir, tex_path],
-            capture_output=True, text=True
-        )
-        process = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode", "-output-directory", tempdir, tex_path],
-            capture_output=True, text=True
-        )
+
+        # Run pdflatex twice for proper cross-references
+        for _ in range(2):
+            process = subprocess.run(
+                ["pdflatex", "-interaction=nonstopmode", "-output-directory", tempdir, tex_path],
+                capture_output=True,
+                text=True,
+            )
 
         if process.returncode != 0:
-            # If compilation fails, return the log for debugging
-            raise HTTPException(status_code=500, detail=f"LaTeX compilation failed: {process.stdout} {process.stderr}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"LaTeX compilation failed: {process.stdout} {process.stderr}",
+            )
 
         if not os.path.exists(pdf_path):
-            raise HTTPException(status_code=500, detail="PDF file was not generated after successful compilation.")
+            raise HTTPException(status_code=500, detail="PDF file was not generated.")
 
-        return FileResponse(pdf_path, media_type='application/pdf', filename="generated_resume.pdf")
+        return FileResponse(pdf_path, media_type="application/pdf", filename="generated_resume.pdf")
+
+
+@app.post("/agent/invoke")
+async def invoke_agent(request: AgentRequest, authorized: bool = Security(verify_api_key)):
+    """Provides career advice by analyzing resume against job description."""
+    prompt = f"""You are a world-class career coach providing advice in a job tracking application.
+
+A user wants to achieve this goal: "{request.user_goal}"
+
+Here is their resume:
+---
+{request.resume_text}
+---
+
+Here is the target job description they want to apply for:
+---
+{request.job_description}
+---
+
+Please perform the following analysis and provide a comprehensive recommendation:
+
+1. First, identify the candidate's key skills and professional profile from the resume.
+2. Then, compare those skills against the job requirements.
+3. Finally, provide a concise, actionable, step-by-step recommendation in Markdown format.
+
+Focus on:
+- Which of their existing skills to emphasize for this specific role
+- Gaps between their profile and the job requirements
+- Specific, actionable steps to improve their candidacy
+- How to tailor their resume for this position
+
+Keep the tone encouraging and professional."""
+
+    recommendation = await call_gemini(prompt, expect_json=False)
+
+    return {"recommendation": recommendation}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

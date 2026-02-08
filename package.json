@@ -21,10 +21,6 @@
     "db:studio": "npm run db:studio --workspace=backend"
   },
   "devDependencies": {
-    "npm-run-all": "^4.1.5",
-    "prisma": "^6.13.0"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.13.0"
+    "npm-run-all": "^4.1.5"
   }
 }

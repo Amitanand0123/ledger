@@ -76,17 +76,17 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
-          <Input id="name" {...register('name')} placeholder="John Doe" className="focus-visible:ring-brand-primary" />
+          <Input id="name" {...register('name')} placeholder="John Doe" className="" />
           {errors.name && <p className="text-sm text-red-500 dark:text-red-400">{errors.name.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" {...register('email')} placeholder="name@example.com" className="focus-visible:ring-brand-primary" />
+          <Input id="email" type="email" {...register('email')} placeholder="name@example.com" className="" />
           {errors.email && <p className="text-sm text-red-500 dark:text-red-400">{errors.email.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...register('password')} placeholder="At least 6 characters" className="focus-visible:ring-brand-primary" />
+          <Input id="password" type="password" {...register('password')} placeholder="At least 6 characters" className="" />
           {errors.password && <p className="text-sm text-red-500 dark:text-red-400">{errors.password.message}</p>}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>

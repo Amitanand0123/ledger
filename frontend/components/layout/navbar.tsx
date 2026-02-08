@@ -49,7 +49,6 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-        {/* Logo on the left */}
         <Link
           href="/dashboard"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
@@ -57,13 +56,12 @@ export function Navbar() {
           <Package2 className="h-6 w-6 text-brand-primary" />
           <span className="sr-only">Ledger</span>
         </Link>
-        {/* Centered Navigation Links */}
         <NavLink href="/dashboard">Dashboard</NavLink>
+        <NavLink href="/upcoming">Upcoming</NavLink>
         <NavLink href="/stats">Statistics</NavLink>
         <NavLink href="/settings">Settings</NavLink>
       </nav>
 
-      {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -72,12 +70,10 @@ export function Navbar() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left">
-           {/* The Sidebar component now cleanly provides the mobile navigation */}
            <Sidebar />
         </SheetContent>
       </Sheet>
 
-      {/* Right-side action buttons */}
       <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <AddJobButton />
         <ThemeToggle />

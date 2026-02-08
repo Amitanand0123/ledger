@@ -59,9 +59,6 @@ export function FilterPanel({ selectedIds, clearSelection }: FilterPanelProps) {
                         return;
                     }
                     try {
-                        // A true bulk delete is one API call. We simulate it with Promise.all.
-                        // The backend has a `DELETE /jobs` endpoint that accepts an array of IDs.
-                        // For now, this is a placeholder for a single bulk delete call.
                         await Promise.all(selectedIds.map(id => deleteJobApi(id).unwrap()));
                         toast.success(`${selectedIds.length} job(s) deleted successfully.`);
                         clearSelection();
@@ -72,9 +69,6 @@ export function FilterPanel({ selectedIds, clearSelection }: FilterPanelProps) {
                     }
                 },
             },
-            // cancel: {
-            //   label: "Cancel"
-            // },
             duration: 10000,
         });
     };

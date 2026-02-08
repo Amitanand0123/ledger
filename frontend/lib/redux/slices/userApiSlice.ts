@@ -17,20 +17,8 @@ export const userApiSlice = createApi({
   endpoints: (builder) => ({
     getAdvancedStats: builder.query<any, void>({
       query: () => 'users/stats/advanced',
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
       providesTags: ['Stats'],
-    }),
-    updateAirtableSettings: builder.mutation<any, { apiKey: string, baseId: string, tableName: string }>({
-        query: (body) => ({
-            url: 'users/settings/airtable',
-            method: 'PUT',
-            body,
-        }),
-    }),
-    syncToAirtable: builder.mutation<{ message: string }, void>({
-        query: () => ({
-            url: 'users/settings/airtable/sync',
-            method: 'POST',
-        }),
     }),
     updateWebhookSettings: builder.mutation<any, { eventType: string, targetUrl: string }>({
         query: (body) => ({
@@ -38,16 +26,16 @@ export const userApiSlice = createApi({
             method: 'PUT',
             body,
         }),
+        transformResponse: (response: { success: boolean; data: any }) => response.data,
     }),
-    getGoogleAuthUrl: builder.mutation<{ url: string }, void>({
+    completeOnboarding: builder.mutation<any, void>({
         query: () => ({
-            url: 'gcal/auth-url',
-            method: 'GET', // Although it's a mutation from the client's perspective, it hits a GET endpoint
+            url: 'users/onboarding/complete',
+            method: 'POST',
         }),
+        transformResponse: (response: { success: boolean; data: any }) => response.data,
     }),
   }),
 });
 
-export const { useGetAdvancedStatsQuery,useUpdateAirtableSettingsMutation, useSyncToAirtableMutation, useUpdateWebhookSettingsMutation,
-useGetGoogleAuthUrlMutation,
-  } = userApiSlice;
+export const { useGetAdvancedStatsQuery, useUpdateWebhookSettingsMutation, useCompleteOnboardingMutation } = userApiSlice;

@@ -26,6 +26,7 @@ export const documentApiSlice = createApi({
     endpoints: (builder) => ({
         getDocuments: builder.query<UserDocument[], 'RESUME' | 'COVER_LETTER' | undefined>({
             query: (type) => `documents${type ? `?type=${type}` : ''}`,
+            transformResponse: (response: { success: boolean; data: UserDocument[] }) => response.data,
             providesTags: (result) =>
                 result
                     ? [...result.map(({ id }) => ({ type: 'Document' as const, id })), { type: 'Document', id: 'LIST' }]
@@ -36,9 +37,19 @@ export const documentApiSlice = createApi({
                 url: `documents/${id}`,
                 method: 'DELETE',
             }),
+            transformResponse: (response: { success: boolean; data: { id: string } }) => response.data,
+            invalidatesTags: [{ type: 'Document', id: 'LIST' }],
+        }),
+        createDocument: builder.mutation<UserDocument, { filename: string; fileKey: string; type: 'RESUME' | 'COVER_LETTER'; latexSource?: string }>({
+            query: (body) => ({
+                url: 'documents',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: boolean; data: UserDocument }) => response.data,
             invalidatesTags: [{ type: 'Document', id: 'LIST' }],
         }),
     }),
 });
 
-export const { useGetDocumentsQuery, useDeleteDocumentMutation } = documentApiSlice;
+export const { useGetDocumentsQuery, useDeleteDocumentMutation, useCreateDocumentMutation } = documentApiSlice;

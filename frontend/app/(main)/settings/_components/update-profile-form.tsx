@@ -25,7 +25,7 @@ export function UpdateProfileForm() {
 
     const onSubmit = async (data: ProfileFormValues) => {
         try {
-            const response = await fetch('/api/v1/users/profile', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,9 +38,8 @@ export function UpdateProfileForm() {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to update profile.');
             }
-
-            // This updates the session on the client-side
-            await update({ name: data.name });
+            // Refetch the session from the server to get updated JWT token
+            await update();
             toast.success('Profile updated successfully!');
 
         } catch (error: any) {

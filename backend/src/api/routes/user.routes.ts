@@ -4,42 +4,27 @@ import {
     changeUserPassword,
     getUserStats,
     getAdvancedUserStats,
-    updateAirtableSettings,
-    syncToAirtable,
-    updateWebhookSettings
+    completeOnboarding,
 } from '../../controllers/user.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
+import { validate } from '../../middleware/validate.middleware.js';
+import {
+    updateProfileSchema,
+    changePasswordSchema,
+    completeOnboardingSchema
+} from '../../validation/user.schemas.js';
 
 const router = Router();
 
-// All user management routes are protected.
 router.use(protect);
 
-/**
- * @route   GET /api/v1/users/stats
- * @desc    Get application statistics for the logged-in user
- * @access  Private
- */
 router.get('/stats', getUserStats);
 router.get('/stats/advanced', getAdvancedUserStats);
 
-/**
- * @route   PUT /api/v1/users/profile
- * @desc    Update the logged-in user's profile information (e.g., name)
- * @access  Private
- */
-router.put('/profile', updateUserProfile);
+router.put('/profile', validate(updateProfileSchema), updateUserProfile);
 
-router.put('/settings/airtable', updateAirtableSettings);
-router.post('/settings/airtable/sync', syncToAirtable);
+router.put('/password', validate(changePasswordSchema), changeUserPassword);
 
-router.put('/settings/webhook', updateWebhookSettings);
-
-/**
- * @route   PUT /api/v1/users/password
- * @desc    Change the logged-in user's password
- * @access  Private
- */
-router.put('/password', changeUserPassword);
+router.post('/onboarding/complete', validate(completeOnboardingSchema), completeOnboarding);
 
 export default router;

@@ -15,11 +15,10 @@ import {
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
 
-// An array defining the order and availability of statuses
 const STATUS_OPTIONS: Status[] = [
     'PENDING', 
     'SHORTLISTED', 
-    'OA', // Online Assessment
+    'OA',
     'INTERVIEW_1', 
     'INTERVIEW_2', 
     'INTERVIEW_FINAL', 
@@ -27,17 +26,15 @@ const STATUS_OPTIONS: Status[] = [
     'REJECTED',
 ];
 
-// A mapping from each status to a specific Tailwind CSS background color class.
-// We'll use your custom theme colors and some standard ones for semantics.
 const statusColorMap: Record<Status, string> = {
-    PENDING: 'bg-gray-400 dark:bg-gray-600',
-    SHORTLISTED: 'bg-brand-secondary', // Using your theme
-    OA: 'bg-yellow-500',
-    INTERVIEW_1: 'bg-brand-primary', // Using your theme
-    INTERVIEW_2: 'bg-brand-primary/80', // Using your theme with opacity
-    INTERVIEW_FINAL: 'bg-brand-primary/60', // Using your theme with more opacity
-    HIRED: 'bg-brand-accent-success text-green-900', // Using your theme
-    REJECTED: 'bg-red-600',
+    PENDING: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    SHORTLISTED: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    OA: 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    INTERVIEW_1: 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    INTERVIEW_2: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    INTERVIEW_FINAL: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    HIRED: 'bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+    REJECTED: 'bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 };
 
 interface StatusDropdownProps {
@@ -52,7 +49,6 @@ export function StatusDropdown({ jobId, currentStatus }: StatusDropdownProps) {
     const isGuest = !session;
 
     const handleStatusChange = (newStatus: string) => {
-        // Prevent API calls if the status hasn't changed
         if (newStatus === currentStatus) {
             return;
         }
@@ -60,11 +56,9 @@ export function StatusDropdown({ jobId, currentStatus }: StatusDropdownProps) {
         const newStatusTyped = newStatus as Status;
         
         if (isGuest) {
-            // Handle guest mode: dispatch a local Redux action
             dispatch(updateGuestJob({ id: jobId, status: newStatusTyped }));
             toast.info('Status updated for demo job.');
         } else {
-            // Handle authenticated user: call the RTK Query mutation
             toast.promise(updateJob({ id: jobId, status: newStatusTyped }).unwrap(), {
                 loading: 'Updating status...',
                 success: `Status updated to ${newStatusTyped.replace(/_/g, ' ')}`,
@@ -73,19 +67,17 @@ export function StatusDropdown({ jobId, currentStatus }: StatusDropdownProps) {
         }
     };
     
-    // Get the color class for the current status, with a fallback
     const badgeColorClass = statusColorMap[currentStatus] || 'bg-gray-500';
     
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                {/* The button now contains a colorful, themed Badge */}
                 <button 
                     disabled={isLoading}
                     aria-label={`Change status for this job. Current status: ${currentStatus.replace(/_/g, ' ')}`}
                     className="rounded-full transition-transform duration-200 hover:scale-105"
                 >
-                    <Badge className={`px-3 py-1 text-xs font-semibold text-white ${badgeColorClass}`}>
+                    <Badge className={`px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
                         {currentStatus.replace(/_/g, ' ')}
                     </Badge>
                 </button>

@@ -1,0 +1,146 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Your Name} \\ \vspace{1pt}
+    \small (123) 456-7890 $|$ \href{mailto:your.email@example.com}{\underline{your.email@example.com}} $|$
+    \href{https://linkedin.com/in/yourprofile}{\underline{linkedin.com/in/yourprofile}} $|$
+    \href{https://github.com/yourusername}{\underline{github.com/yourusername}}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University Name}{City, State}
+      {Bachelor of Science in Computer Science}{Aug. 2018 -- May 2022}
+  \resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Software Engineer}{June 2022 -- Present}
+      {Company Name}{City, State}
+      \resumeItemListStart
+        \resumeItem{Developed and maintained full-stack web applications using React, Node.js, and PostgreSQL, serving over 100,000 users}
+        \resumeItem{Implemented RESTful APIs and microservices architecture, improving system scalability by 40\%}
+        \resumeItem{Collaborated with cross-functional teams to deliver features on time using Agile methodologies}
+        \resumeItem{Optimized database queries and implemented caching strategies, reducing page load times by 50\%}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Software Engineering Intern}{May 2021 -- Aug. 2021}
+      {Tech Company}{City, State}
+      \resumeItemListStart
+        \resumeItem{Built responsive user interfaces using React and TypeScript for internal analytics dashboard}
+        \resumeItem{Integrated third-party APIs and implemented authentication using OAuth 2.0}
+        \resumeItem{Wrote comprehensive unit tests achieving 85\% code coverage using Jest and React Testing Library}
+    \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{Job Application Tracker} $|$ \emph{React, Node.js, PostgreSQL, AI Integration}}{2024}
+          \resumeItemListStart
+            \resumeItem{Built a full-stack application to track job applications with AI-powered resume optimization}
+            \resumeItem{Integrated OpenAI API for intelligent job matching and resume tailoring suggestions}
+            \resumeItem{Implemented real-time updates using Socket.IO and state management with Redux Toolkit}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{E-Commerce Platform} $|$ \emph{Next.js, Stripe, MongoDB}}{2023}
+          \resumeItemListStart
+            \resumeItem{Developed a scalable e-commerce platform with payment processing and inventory management}
+            \resumeItem{Implemented server-side rendering and SEO optimization using Next.js}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: JavaScript, TypeScript, Python, Java, SQL, HTML/CSS} \\
+     \textbf{Frameworks}{: React, Node.js, Express, Next.js, Django, Flask} \\
+     \textbf{Developer Tools}{: Git, Docker, AWS, PostgreSQL, MongoDB, Redis} \\
+     \textbf{Libraries}{: Redux, TailwindCSS, Prisma, Jest, Socket.IO}
+    }}
+ \end{itemize}
+
+%-------------------------------------------
+\end{document}

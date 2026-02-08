@@ -9,7 +9,7 @@ export function AddJobButton() {
     const dispatch = useAppDispatch();
 
     const handleClick = () => {
-        dispatch(setEditingJob(null)); // Ensure we're not in edit mode
+        dispatch(setEditingJob(null));
         dispatch(openJobFormModal());
     };
 

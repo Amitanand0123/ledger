@@ -19,7 +19,7 @@ export default function LoginPage() {
                     <p className="text-muted-foreground">Log in to access your job board.</p>
                 </div>
 
-                <div className="bg-card p-6 sm:p-8 rounded-lg shadow-md">
+                <div className="bg-card p-6 sm:p-8 rounded-2xl shadow-md">
                    <Suspense fallback={<div>Loading...</div>}>
                         <LoginPageContent />
                    </Suspense>

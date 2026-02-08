@@ -4,13 +4,14 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { JobApplication } from '@/lib/types';
 import { Button } from '../ui/button';
-import { Edit, Trash2, GripVertical, MoreHorizontal, Link as LinkIcon, Briefcase, FileText, MapPin } from 'lucide-react';
+import { Edit, Trash2, GripVertical, MoreHorizontal, Link as LinkIcon, Briefcase, FileText, MapPin, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '@/lib/redux/hooks';
-import { openJobDetailsModal, setEditingJob, openJobFormModal, setViewingJob, openDescriptionModal } from '@/lib/redux/slices/uiSlice';
+import { setEditingJob, openJobFormModal, openDescriptionModal } from '@/lib/redux/slices/uiSlice';
 import { useDeleteJobMutation, useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
 import { StatusCombobox } from './status-combobox'; 
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { deleteGuestJob, updateGuestJob } from '@/lib/redux/slices/guestJobsSlice';
 import { Checkbox } from '../ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -18,9 +19,10 @@ import { TruncatedText } from '../ui/truncated-text';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
-import { Loader2 } from 'lucide-react';
 import { UserDocument } from '@/lib/types';
 import { useState } from 'react';
+import { Badge } from '../ui/badge';
+import { differenceInDays } from 'date-fns';
 
 interface JobCardProps {
     job: JobApplication;
@@ -78,11 +80,24 @@ function DocumentSelector({ job, type }: { job: JobApplication, type: 'RESUME' |
 
 export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionChange }: JobCardProps) {
     const dispatch = useAppDispatch();
+    const router = useRouter();
     const { data: session } = useSession();
     const isGuest = !session;
 
     const [deleteJobApi] = useDeleteJobMutation();
     const [updateJobApi] = useUpdateJobMutation();
+
+    // Check for upcoming interviews
+    const now = new Date();
+    const upcomingInterviews = job.interviews?.filter(
+        interview => !interview.completed && new Date(interview.scheduledAt) > now,
+    ) || [];
+    const hasUpcomingInterviews = upcomingInterviews.length > 0;
+
+    // Check for approaching deadline
+    const hasDeadline = !!job.deadline;
+    const daysUntilDeadline = hasDeadline ? differenceInDays(new Date(job.deadline!), now) : null;
+    const isDeadlineApproaching = hasDeadline && daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
 
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: job.id, data: { type: 'Job', job },
@@ -91,7 +106,7 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
     const style = { transition, transform: CSS.Transform.toString(transform) };
 
     const handleEdit = () => { dispatch(setEditingJob(job)); dispatch(openJobFormModal()); };
-    const handleViewDetails = () => { dispatch(setViewingJob(job)); dispatch(openJobDetailsModal()); };
+    const handleViewDetails = () => { router.push(`/jobs/${job.id}`); };
     const handleOpenDescriptionModal = () => dispatch(openDescriptionModal(job));
 
     const handleDelete = () => {
@@ -125,30 +140,41 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
         return <div ref={setNodeRef} style={style} className="bg-card p-4 rounded-lg border-2 border-primary opacity-50 h-[60px] w-full" />;
     }
     
-    // FIXED: Corrected the onClick handler type to accept a MouseEvent
     const renderCell = (content: React.ReactNode, className: string = '', onClick?: (event: React.MouseEvent) => void) => (
-        <div className={`flex items-center justify-center p-2 truncate text-sm text-muted-foreground ${className} ${onClick ? 'cursor-pointer' : ''}`}
+        <div className={`flex items-center p-2 min-w-0 text-sm text-muted-foreground ${className} ${onClick ? 'cursor-pointer' : ''}`}
              onClick={onClick}>
-            {content}
+            <span className="truncate">{content}</span>
         </div>
     );
 
     return (
         <div ref={setNodeRef} style={style} className={`touch-none w-full border rounded-lg transition-shadow duration-200 ${isOverlay ? 'shadow-2xl z-50' : ''} ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''} ${colorClass}`}>
-            <div className="grid items-center gap-x-4 cursor-default text-center
+            <div className="grid items-center gap-x-4 cursor-default
                             grid-cols-[auto_40px_1.5fr_1fr_40px]
-                            md:grid-cols-[auto_40px_minmax(120px,1.2fr)_minmax(120px,1.2fr)_130px_minmax(100px,1fr)_100px_100px_100px_1fr_1fr_1fr_40px]">
+                            md:grid-cols-[auto_40px_minmax(120px,1.2fr)_minmax(120px,1.2fr)_160px_minmax(100px,1fr)_100px_100px_100px_1fr_1fr_1fr_40px]">
                 
                 <div className="flex items-center pl-2"><Checkbox checked={isSelected} onCheckedChange={(c) => onSelectionChange(job.id, !!c)} onClick={(e) => e.stopPropagation()}/></div>
                 <button {...attributes} {...listeners} className="p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"><GripVertical size={18} /></button>
 
-                {/* --- Columns in specified order --- */}
                 <div className="p-2 col-span-1 text-left cursor-pointer" onClick={handleViewDetails}>
                     <p className="font-semibold truncate text-foreground">{job.company}</p>
                     <p className="truncate text-muted-foreground md:hidden">{job.position}</p>
+                    <div className="flex gap-1 mt-1">
+                        {hasUpcomingInterviews && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 flex items-center gap-1">
+                                <Calendar size={10} />
+                                <span>{upcomingInterviews.length}</span>
+                            </Badge>
+                        )}
+                        {isDeadlineApproaching && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 flex items-center gap-1">
+                                <AlertCircle size={10} />
+                                <span>{daysUntilDeadline}d</span>
+                            </Badge>
+                        )}
+                    </div>
                 </div>
                 {renderCell(<TruncatedText text={job.position} maxLength={25} />, 'hidden md:flex text-left', handleViewDetails)}
-                {/* FIXED: The onClick handler now correctly matches the expected signature */}
                 {renderCell(<StatusCombobox currentStatus={job.status} onStatusChange={handleStatusChange} />, '', (e) => e.stopPropagation())}
                 {renderCell(<div className='flex items-center gap-1'><MapPin size={14}/><TruncatedText text={job.location} maxLength={15}/></div>, 'hidden md:flex', handleViewDetails)}
                 {renderCell(<span>{new Date(job.applicationDate).toLocaleDateString()}</span>, 'hidden md:flex', handleViewDetails)}

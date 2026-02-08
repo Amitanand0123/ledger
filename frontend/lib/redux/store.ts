@@ -8,7 +8,8 @@ import { documentApiSlice } from './slices/documentApiSlice';
 import { userApiSlice } from './slices/userApiSlice';
 import { agentApiSlice } from './slices/agentApiSlice';
 import { statsApiSlice } from './slices/statsApiSlice';
-import { platformApiSlice } from './slices/platformApiSlice'; // New Slice
+import { platformApiSlice } from './slices/platformApiSlice';
+import { sharingApiSlice } from './slices/sharingApiSlice';
 
 export const makeStore = () => {
   return configureStore({
@@ -22,7 +23,8 @@ export const makeStore = () => {
       [userApiSlice.reducerPath]: userApiSlice.reducer,
       [agentApiSlice.reducerPath]: agentApiSlice.reducer,
       [statsApiSlice.reducerPath]: statsApiSlice.reducer,
-      [platformApiSlice.reducerPath]: platformApiSlice.reducer, // Add reducer
+      [platformApiSlice.reducerPath]: platformApiSlice.reducer,
+      [sharingApiSlice.reducerPath]: sharingApiSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware()
@@ -32,7 +34,8 @@ export const makeStore = () => {
         .concat(userApiSlice.middleware)
         .concat(agentApiSlice.middleware)
         .concat(statsApiSlice.middleware)
-        .concat(platformApiSlice.middleware), // Add middleware
+        .concat(platformApiSlice.middleware)
+        .concat(sharingApiSlice.middleware),
   });
 };
 

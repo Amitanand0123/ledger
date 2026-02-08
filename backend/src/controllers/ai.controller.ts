@@ -1,47 +1,45 @@
 import asyncHandler from 'express-async-handler';
 import { Response } from 'express';
 import * as AIService from '../services/ai.service.js';
-import { prisma } from '../config/db.js';
+import { db } from '../db/client.js';
+import { jobApplications } from '../db/schema/index.js';
+import { eq, and, sql } from 'drizzle-orm';
+import { ValidationError, NotFoundError, ApiError } from '../utils/ApiError.js';
+import { sendSuccess } from '../utils/response.js';
 
-/**
- * @desc    Get AI-powered analysis for a specific job description
- * @route   GET /api/v1/ai/analyze/:jobId
- * @access  Private
- */
 export const getJobAnalysis = asyncHandler(async (req: any, res: Response) => {
     const { jobId } = req.params;
     if (!jobId) {
-        res.status(400);
-        throw new Error('Job ID is required in the URL parameters.');
+        throw new ValidationError('Job ID is required in the URL parameters.');
     }
 
-    const job = await prisma.jobApplication.findFirst({
-        where: { id: jobId, userId: req.user.id },
-        select: { aiAnalysisCount: true, description: true },
-    });
+    const [job] = await db
+        .select({
+            aiAnalysisCount: jobApplications.aiAnalysisCount,
+            description: jobApplications.description,
+        })
+        .from(jobApplications)
+        .where(and(eq(jobApplications.id, jobId), eq(jobApplications.userId, req.user.id)))
+        .limit(1);
 
     if (!job) {
-        res.status(404);
-        throw new Error('Job not found or user not authorized.');
+        throw new NotFoundError('Job');
     }
 
     if (job.aiAnalysisCount >= 2) {
-        res.status(429); // Too Many Requests
-        throw new Error('AI analysis limit reached for this job application.');
+        throw new ApiError(429, 'AI analysis limit reached for this job application.');
     }
 
     const analysis = await AIService.analyzeJobDescription(job.description);
 
     if (!analysis) {
-        res.status(404);
-        throw new Error('Could not generate analysis. The description may be too short.');
+        throw new NotFoundError('Analysis');
     }
-    
-    // Increment the counter after a successful analysis
-    await prisma.jobApplication.update({
-        where: { id: jobId },
-        data: { aiAnalysisCount: { increment: 1 } },
-    });
 
-    res.status(200).json({ analysis });
+    await db
+        .update(jobApplications)
+        .set({ aiAnalysisCount: sql`${jobApplications.aiAnalysisCount} + 1` })
+        .where(eq(jobApplications.id, jobId));
+
+    sendSuccess(res, 200, { analysis });
 });

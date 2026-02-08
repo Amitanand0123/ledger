@@ -10,12 +10,12 @@ import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { useSession } from 'next-auth/react';
 import { updateGuestJob } from '@/lib/redux/slices/guestJobsSlice';
 import { useAppDispatch } from '@/lib/redux/hooks';
+import { toast } from 'sonner';
 
-// Color Workaround: Define colors directly as Tailwind classes
 const THEME_COLORS = [
-    'bg-[#8DBCC7]/5 dark:bg-[#8DBCC7]/10', // brand-primary
-    'bg-[#A4CCD9]/5 dark:bg-[#A4CCD9]/10', // brand-secondary
-    'bg-[#C4E1E6]/20 dark:bg-[#C4E1E6]/10', // brand-accent-light
+    'bg-blue-50/50 dark:bg-blue-950/20',
+    'bg-slate-50/80 dark:bg-slate-800/20',
+    'bg-indigo-50/30 dark:bg-indigo-950/20',
     'bg-muted',
 ];
 
@@ -51,7 +51,7 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
     if (job) setActiveJob(job);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveJob(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -62,16 +62,28 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
     if (oldIndex !== newIndex) {
         const reorderedJobs = arrayMove(orderedJobs, oldIndex, newIndex);
         setOrderedJobs(reorderedJobs);
-        
-        reorderedJobs.forEach((job, index) => {
-            if (job.order !== index) {
+
+        // Collect all update operations
+        const updates = reorderedJobs
+            .filter((job, index) => job.order !== index)
+            .map((job, index) => {
                 if (isGuest) {
                     dispatch(updateGuestJob({ id: job.id, order: index }));
+                    return Promise.resolve();
                 } else {
-                    updateJob({ id: job.id, order: index });
+                    return updateJob({ id: job.id, order: index }).unwrap();
                 }
-            }
-        });
+            });
+
+        // Execute all updates in parallel with proper error handling
+        try {
+            await Promise.all(updates);
+        } catch (error) {
+            console.error('Failed to update job order:', error);
+            toast.error('Failed to update job order. Please refresh the page.');
+            // Revert to original order on error
+            setOrderedJobs(jobs);
+        }
     }
   };
 

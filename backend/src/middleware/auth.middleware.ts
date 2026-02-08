@@ -1,57 +1,46 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/db.js';
+import { db } from '../db/client.js';
+import { users } from '../db/schema/index.js';
+import { eq } from 'drizzle-orm';
 import config from '../config/index.js';
+import { UnauthorizedError } from '../utils/ApiError.js';
+import { logger } from '../utils/logger.js';
 
-/**
- * Middleware to protect routes that require authentication.
- * Verifies the JWT from the Authorization header.
- * If valid, attaches the user object to the request.
- * If invalid or not present, throws a 401 Unauthorized error.
- */
-export const protect = asyncHandler(
-    async (req: any, res: Response, next: NextFunction) => {
-        let token;
+export const protect = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+    let token: string | undefined;
 
-        // Check if the Authorization header exists and starts with "Bearer"
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')
-        ) {
-            try {
-                // Extract the token from the header (e.g., "Bearer <token>")
-                token = req.headers.authorization.split(' ')[1];
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        try {
+            token = req.headers.authorization.split(' ')[1];
+            const secret: string = config.jwtSecret!;
+            const decoded = jwt.verify(token!, secret) as unknown as { id: string };
 
-                // Verify the token using the secret key 
-                const decoded: any = jwt.verify(token, config.jwtSecret!);
+            const [user] = await db
+                .select({ id: users.id, name: users.name, email: users.email })
+                .from(users)
+                .where(eq(users.id, decoded.id))
+                .limit(1);
 
-                // Use the ID from the decoded token to find the user in the database.
-                // We explicitly select which fields to return, excluding the password hash for security.
-                req.user = await prisma.user.findUnique({
-                    where: { id: decoded.id },
-                    select: { id: true, name: true, email: true },
-                });
-
-                // If the user associated with the token no longer exists (e.g., deleted account)
-                if (!req.user) {
-                    res.status(401);
-                    throw new Error('Not authorized, user not found');
-                }
-
-                // If everything is successful, proceed to the next middleware or route handler
-                next();
-            } catch (error) {
-                console.error('Token verification failed:', error);
-                res.status(401);
-                throw new Error('Not authorized, token failed');
+            if (!user) {
+                throw new UnauthorizedError('Not authorized, user not found');
             }
-        }
 
-        // If no token is found in the header at all
-        if (!token) {
-            res.status(401);
-            throw new Error('Not authorized, no token provided');
+            req.user = user;
+            next();
+        } catch (error) {
+            if (error instanceof UnauthorizedError) {
+                throw error;
+            }
+            logger.warn('Token verification failed', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+            });
+            throw new UnauthorizedError('Not authorized, token failed');
         }
     }
-);
+
+    if (!token) {
+        throw new UnauthorizedError('Not authorized, no token provided');
+    }
+});

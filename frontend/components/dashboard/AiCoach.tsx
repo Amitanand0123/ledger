@@ -1,4 +1,3 @@
-// frontend/components/dashboard/AiCoach.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -17,16 +16,12 @@ interface AiCoachProps {
 }
 
 export function AiCoach({ jobId }: AiCoachProps) {
-    // --- STATE MANAGEMENT FIX ---
-    // State to hold the ID of the currently selected resume from the dropdown.
     const [selectedResumeId, setSelectedResumeId] = useState<string>('');
     const [userGoal, setUserGoal] = useState('Help me tailor my resume and prepare for this job.');
     
     const { data: resumes, isLoading: isLoadingResumes } = useGetDocumentsQuery('RESUME');
     const [invokeAgent, { data, isLoading: isThinking, error, reset }] = useInvokeAgentMutation();
 
-    // --- UX IMPROVEMENT ---
-    // If resumes have loaded and no resume is selected yet, automatically select the first one.
     useEffect(() => {
         if (resumes && resumes.length > 0 && !selectedResumeId) {
             setSelectedResumeId(resumes[0].id);
@@ -34,13 +29,10 @@ export function AiCoach({ jobId }: AiCoachProps) {
     }, [resumes, selectedResumeId]);
 
     const handleGetAdvice = () => {
-        // --- CLIENT-SIDE VALIDATION ---
-        // Prevent API call if no resume is selected.
         if (!selectedResumeId) {
             toast.error('Please select a resume to analyze.');
             return;
         }
-        // Clear previous results before making a new request
         reset();
         
         toast.promise(invokeAgent({ jobId, resumeId: selectedResumeId, userGoal }).unwrap(), {

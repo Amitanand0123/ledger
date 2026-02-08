@@ -18,11 +18,9 @@ export const platformApiSlice = createApi({
   endpoints: (builder) => ({
     getPlatforms: builder.query<JobPlatform[], string | void>({
       query: (search) => `platforms${search ? `?search=${search}` : ''}`,
+      transformResponse: (response: { success: boolean; data: JobPlatform[] }) => response.data,
       providesTags: ['Platform'],
     }),
-    // The creation is handled implicitly by the backend when a job is created
-    // with a new platformName, so we only need to invalidate the list.
-    // This is handled by invalidating the 'Job' LIST tag which causes a dashboard refresh.
   }),
 });
 

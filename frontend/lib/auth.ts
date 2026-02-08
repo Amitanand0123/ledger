@@ -2,22 +2,56 @@ import { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// INTERNAL_API_URL is a server-only env var (not baked at build time by Next.js).
+// In Docker, this resolves to the internal network URL (e.g., http://backend:5000).
+// Falls back to NEXT_PUBLIC_API_URL for local development.
+const apiBaseUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+if (!apiBaseUrl) {
+    throw new Error('FATAL: INTERNAL_API_URL or NEXT_PUBLIC_API_URL environment variable is not set. Application cannot start without a backend URL.');
+}
 
-// Define a new interface for the user object to include our custom properties
 interface CustomUser extends NextAuthUser {
   token?: string;
+  refreshToken?: string;
   _id?: string;
+}
+
+async function refreshAccessToken(token: any) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: token.refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const result = await response.json();
+    const refreshedTokens = result.data;
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.token,
+      refreshToken: refreshedTokens.refreshToken,
+      accessTokenExpires: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+    };
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return {
+      ...token,
+      error: 'RefreshAccessTokenError',
+    };
+  }
 }
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    // Google OAuth Provider
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    // Email/Password Credentials Provider
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -33,8 +67,17 @@ export const authOptions: NextAuthOptions = {
             headers: { 'Content-Type': 'application/json' },
           });
           if (!res.ok) return null;
-          const user = await res.json();
-          if (user && user.token) return user;
+          const response = await res.json();
+          if (response && response.success && response.data) {
+            const userData = response.data;
+            return {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              token: userData.token,
+              refreshToken: userData.refreshToken,
+            };
+          }
           return null;
         } catch (error) {
           console.error('Authorize error:', error);
@@ -47,21 +90,15 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  
+
   pages: {
     signIn: '/login',
   },
 
   callbacks: {
-    /**
-     * This callback is called when a user signs in.
-     * For Google OAuth, we use it to talk to our backend to create/update the user
-     * and get our own application-specific JWT.
-     */
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
-          console.log('Attempting Google OAuth backend call...');
           const res = await fetch(`${apiBaseUrl}/api/v1/auth/oauth`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -74,58 +111,104 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!res.ok) {
-            const errorBody = await res.text();
-            console.error(`Backend OAuth failed with status ${res.status}:`, errorBody);
-            return false; // This is what triggers the OAuthSignin error
+            return false;
           }
 
-          const backendUser = await res.json();
-          console.log('Backend OAuth successful:', backendUser);
-
-          // Inject our backend token and user ID into the user object
-          // so the `jwt` callback can access them.
-          if (backendUser.token) {
+          const response = await res.json();
+          if (response && response.success && response.data) {
+            const backendUser = response.data;
             (user as CustomUser).token = backendUser.token;
-            (user as CustomUser)._id = backendUser._id;
+            (user as CustomUser).refreshToken = backendUser.refreshToken;
+            (user as CustomUser)._id = backendUser.id;
             return true;
           }
 
-          console.error('Backend response missing token.');
           return false;
 
         } catch (error) {
-          console.error('CRITICAL: Error during Google Sign In callback fetch:', error);
           return false;
         }
       }
-      return true; // For other providers like credentials
+      return true;
     },
 
-    /**
-     * The `jwt` callback is executed whenever a JSON Web Token is created or updated.
-     */
-    async jwt({ token, user }) {
-      // The `user` object is what's returned from `authorize` or the `signIn` callback.
+    async jwt({ token, user, trigger }) {
       const customUser = user as CustomUser;
+
+      // Initial sign in
       if (customUser) {
         token.accessToken = customUser.token;
-        token.id = customUser._id;
+        token.refreshToken = customUser.refreshToken;
+        token.id = customUser._id || customUser.id;
         token.name = customUser.name;
         token.email = customUser.email;
+        token.accessTokenExpires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
       }
+
+      // Return previous token if the access token has not expired yet
+      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // Access token has expired, try to refresh it
+      if (token.refreshToken) {
+        return refreshAccessToken(token);
+      }
+
+      // When update() is called, fetch fresh user data from backend
+      if (trigger === 'update' && token.accessToken) {
+        try {
+          const res = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token.accessToken}`,
+            },
+          });
+          if (res.ok) {
+            const response = await res.json();
+            const userData = response.data;
+            token.name = userData.name;
+            token.email = userData.email;
+            token.onboardingCompleted = userData.onboardingCompleted;
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      }
+
+      // Fetch onboarding status on first login
+      if (token.onboardingCompleted === undefined && token.accessToken && customUser) {
+        try {
+          const res = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token.accessToken}`,
+            },
+          });
+          if (res.ok) {
+            const response = await res.json();
+            const userData = response.data;
+            token.onboardingCompleted = userData.onboardingCompleted;
+          }
+        } catch (error) {
+          console.error('Error fetching onboarding status:', error);
+        }
+      }
+
       return token;
     },
 
-    /**
-     * The `session` callback builds the session object exposed to the client.
-     */
     async session({ session, token }) {
       if (token) {
         session.accessToken = token.accessToken as string;
+        session.refreshToken = token.refreshToken as string;
         if (session.user) {
             session.user.id = token.id as string;
             session.user.name = token.name;
             session.user.email = token.email;
+            session.user.onboardingCompleted = token.onboardingCompleted;
+        }
+        // Pass error to the client
+        if (token.error) {
+          session.error = token.error as string;
         }
       }
       return session;

@@ -1,4 +1,3 @@
-// frontend/components/dashboard/description-modal.tsx
 'use client';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -47,7 +46,6 @@ export function DescriptionModal() {
 
     const handleSaveSummary = () => {
         if (!job || !summary) return;
-        // FIX: Save the generated text to the `summary` field, not `description`
         toast.promise(updateJob({ id: job.id, summary: summary }).unwrap(), {
             loading: 'Saving summary...',
             success: () => { handleClose(); return 'Summary saved successfully!'; },
@@ -65,12 +63,12 @@ export function DescriptionModal() {
 
     return (
         <Dialog open={isDescriptionModalOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] w-[92vw]">
                 <DialogHeader>
                     <DialogTitle>Job Description & Summary</DialogTitle>
                     <DialogDescription>For {job.position} at {job.company}</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div className="space-y-4 py-4 max-h-[calc(90vh-200px)] overflow-y-auto pr-2">
                     <div className="space-y-2 rounded-lg border bg-accent/50 p-4">
                         <div className="flex justify-between items-center">
                             <h4 className="font-semibold text-foreground">AI Summary</h4>

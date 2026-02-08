@@ -1,14 +1,16 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { getSession } from 'next-auth/react';
-import { JobApplication, Status } from '@/lib/types';
+import { JobApplication, PaginatedResponse, Status } from '@/lib/types';
 
 type GetJobsQueryArgs = {
     search?: string;
     location?: string;
-    dateRange?: string; // Expects JSON string of date range object
+    dateRange?: string;
     status?: string;
     salaryMin?: string;
     salaryMax?: string;
+    page?: number;
+    limit?: number;
 }
 
 export const jobsApiSlice = createApi({
@@ -25,7 +27,7 @@ export const jobsApiSlice = createApi({
   }),
   tagTypes: ['Job'],
   endpoints: (builder) => ({
-    getJobs: builder.query<JobApplication[], GetJobsQueryArgs | void>({
+    getJobs: builder.query<PaginatedResponse<JobApplication>, GetJobsQueryArgs | void>({
       query: (args) => {
           const params = new URLSearchParams();
           if (args) {
@@ -39,27 +41,36 @@ export const jobsApiSlice = createApi({
             }
             if (args.salaryMin) params.append('salaryMin', args.salaryMin);
             if (args.salaryMax) params.append('salaryMax', args.salaryMax);
+            if (args.page) params.append('page', args.page.toString());
+            if (args.limit) params.append('limit', args.limit.toString());
           }
           return `jobs?${params.toString()}`;
       },
+      transformResponse: (response: { success: boolean; data: JobApplication[]; pagination: any }) => ({
+        data: response.data,
+        pagination: response.pagination,
+      }),
       providesTags: (result) =>
         result
-          ? [ ...result.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'LIST' }]
+          ? [ ...result.data.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'LIST' }]
           : [{ type: 'Job', id: 'LIST' }],
     }),
-    
+
     addJob: builder.mutation<JobApplication, Partial<JobApplication>>({
       query: (body) => ({ url: 'jobs', method: 'POST', body }),
+      transformResponse: (response: { success: boolean; data: JobApplication }) => response.data,
       invalidatesTags: [{ type: 'Job', id: 'LIST' }],
     }),
 
     updateJob: builder.mutation<JobApplication, Partial<JobApplication> & Pick<JobApplication, 'id'>>({
       query: ({ id, ...patch }) => ({ url: `jobs/${id}`, method: 'PUT', body: patch }),
+      transformResponse: (response: { success: boolean; data: JobApplication }) => response.data,
       invalidatesTags: (result, error, { id }) => [{ type: 'Job', id }, { type: 'Job', id: 'LIST' }],
     }),
 
     deleteJob: builder.mutation<{ id: string }, string>({
         query: (id) => ({ url: `jobs/${id}`, method: 'DELETE' }),
+        transformResponse: (response: { success: boolean; data: { id: string } }) => response.data,
         invalidatesTags: (result, error, id) => [{ type: 'Job', id: 'LIST' }],
     }),
     analyzeJobMatch: builder.mutation<any, { jobId: string, resumeId: string }>({
@@ -68,15 +79,18 @@ export const jobsApiSlice = createApi({
             method: 'POST',
             body: { resumeId },
         }),
+        transformResponse: (response: { success: boolean; data: any }) => response.data,
+    }),
+    getJobById: builder.query<JobApplication, string>({
+      query: (id) => `jobs/${id}`,
+      transformResponse: (response: { success: boolean; data: JobApplication }) => response.data,
+      providesTags: (result, error, id) => [{ type: 'Job', id }],
     }),
     findSimilarJobs: builder.query<JobApplication[], string>({
         query: (jobId) => `jobs/${jobId}/similar`,
+        transformResponse: (response: { success: boolean; data: JobApplication[] }) => response.data,
     }),
-    
-    // NOTE: A true bulk delete would be a single API call. 
-    // This hook is not used directly; we loop over the single delete mutation for simplicity.
-    // A production app should have a `DELETE /jobs` endpoint that accepts an array of IDs.
   }),
 });
 
-export const { useGetJobsQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation, useFindSimilarJobsQuery } = jobsApiSlice;
+export const { useGetJobsQuery, useGetJobByIdQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation, useFindSimilarJobsQuery } = jobsApiSlice;

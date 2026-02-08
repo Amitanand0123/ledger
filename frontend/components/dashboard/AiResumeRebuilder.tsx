@@ -1,4 +1,3 @@
-// frontend/components/dashboard/AiResumeRebuilder.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -41,7 +40,6 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
         try {
             const result = await rebuildResume({ jobId, resumeId: selectedResumeId }).unwrap();
             toast.success('Resume rebuilt! Attaching it to this job application.');
-            // Automatically attach the new resume to the job
             await updateJob({ id: jobId, resumeId: result.newDocument.id }).unwrap();
         } catch (err: any) {
             const errorMessage = err.data?.message || 'An unknown error occurred while rebuilding.';
@@ -64,8 +62,7 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
             if (!res.ok) throw new Error('Could not get download link.');
 
             const { url } = await res.json();
-            
-            // Trigger the download by opening the secure URL in a new tab
+        
             window.open(url, '_blank');
             toast.success('Download started!', { id: toastId });
 

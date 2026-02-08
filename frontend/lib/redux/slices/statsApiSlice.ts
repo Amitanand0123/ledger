@@ -17,6 +17,7 @@ export const statsApiSlice = createApi({
   endpoints: (builder) => ({
     getStats: builder.query<any, void>({
       query: () => 'users/stats',
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
       providesTags: ['Stats'],
     }),
   }),

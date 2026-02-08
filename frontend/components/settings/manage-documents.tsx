@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetDocumentsQuery, useDeleteDocumentMutation, documentApiSlice } from '@/lib/redux/slices/documentApiSlice';
-import { Loader2, PlusCircle, Trash2, FileText, UploadCloud } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { Input } from '../ui/input';
@@ -12,136 +12,55 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAppDispatch } from '@/lib/redux/hooks';
 import { DocumentUploader } from './DocumentUploader';
 
-interface DocumentUploaderProps {
-    type: 'RESUME' | 'COVER_LETTER';
-    onUploadComplete: () => void;
-}
-
-// function DocumentUploader({ type, onUploadComplete }: DocumentUploaderProps) {
-//     const { data: session } = useSession();
-//     const [isUploading, setIsUploading] = useState(false);
-//     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-//     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-//         const file = event.target.files?.[0];
-//         if (file) setSelectedFile(file);
-//     };
-
-//     const handleUpload = async () => {
-//         if (!selectedFile || !session) return;
-//         setIsUploading(true);
-
-//         const uploadPromise = new Promise(async (resolve, reject) => {
-//             try {
-//                 // 1. Get presigned URL
-//                 const presignedUrlRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/uploads/presigned-url`, {
-//                     method: 'POST',
-//                     headers: { 
-//                         'Content-Type': 'application/json', 
-//                         'Authorization': `Bearer ${session.accessToken}` 
-//                     },
-//                     body: JSON.stringify({ 
-//                         filename: selectedFile.name, 
-//                         contentType: selectedFile.type 
-//                     })
-//                 });
-                
-//                 if (!presignedUrlRes.ok) {
-//                     const errorText = await presignedUrlRes.text();
-//                     return reject(new Error(`Could not get an upload URL: ${errorText}`));
-//                 }
-                
-//                 const { signedUrl, key } = await presignedUrlRes.json();
-
-//                 // 2. Upload to S3 with proper headers
-//                 const s3UploadRes = await fetch(signedUrl, { 
-//                     method: 'PUT', 
-//                     body: selectedFile,
-//                     headers: { 
-//                         'Content-Type': selectedFile.type,
-//                         // Remove any other headers that might interfere
-//                     },
-//                     mode: 'cors' // Explicitly set CORS mode
-//                 });
-                
-//                 if (!s3UploadRes.ok) {
-//                     const errorText = await s3UploadRes.text();
-//                     return reject(new Error(`File upload to S3 failed: ${s3UploadRes.status} ${errorText}`));
-//                 }
-
-//                 // 3. Create document record in our DB
-//                 const docCreateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents`, {
-//                     method: 'POST',
-//                     headers: { 
-//                         'Content-Type': 'application/json', 
-//                         'Authorization': `Bearer ${session.accessToken}` 
-//                     },
-//                     body: JSON.stringify({ 
-//                         filename: selectedFile.name, 
-//                         fileKey: key, 
-//                         type 
-//                     })
-//                 });
-                
-//                 if (!docCreateRes.ok) {
-//                     const errorText = await docCreateRes.text();
-//                     return reject(new Error(`Failed to save document record: ${errorText}`));
-//                 }
-                
-//                 resolve(`File "${selectedFile.name}" uploaded successfully!`);
-
-//             } catch (error) {
-//                 console.error('Upload error:', error);
-//                 reject(error);
-//             }
-//         });
-
-//         try {
-//             await toast.promise(uploadPromise, {
-//                 loading: "Uploading file...",
-//                 success: (message) => `${message}`,
-//                 error: (err) => `${err.message || "Upload failed."}`
-//             });
-            
-//             onUploadComplete();
-//         } catch (error) {
-//             console.error('Upload failed:', error);
-//         } finally {
-//             setIsUploading(false);
-//             setSelectedFile(null);
-//         }
-//     };
-
-//     return (
-//         <div className="flex items-center gap-2 mt-2">
-//             <Input 
-//                 type="file" 
-//                 onChange={handleFileChange} 
-//                 className="flex-1" 
-//                 disabled={isUploading}
-//                 accept=".pdf,.doc,.docx" 
-//             />
-//             <Button 
-//                 onClick={handleUpload} 
-//                 disabled={!selectedFile || isUploading} 
-//                 size="icon" 
-//                 variant="secondary"
-//             >
-//                 {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-//             </Button>
-//         </div>
-//     );
-// }
-
 
 export function ManageDocuments() {
     const dispatch = useAppDispatch();
+    const { data: session } = useSession();
     const { data: documents, isLoading } = useGetDocumentsQuery(undefined);
     const [deleteDocument, { isLoading: isDeleting }] = useDeleteDocumentMutation();
-    
-    // State to control the visibility of each uploader
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
     const [showResumeUploader, setShowResumeUploader] = useState(false);
     const [showCoverLetterUploader, setShowCoverLetterUploader] = useState(false);
+
+    const handleDownload = async (id: string, filename: string) => {
+        if (!session?.accessToken) {
+            toast.error('Please log in to download documents.');
+            return;
+        }
+
+        setDownloadingId(id);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${id}/download-url`, {
+                headers: {
+                    'Authorization': `Bearer ${session.accessToken}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get download URL');
+            }
+
+            const result = await response.json();
+            const { url } = result.data;
+
+            // Trigger download using a temporary anchor element
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            toast.success(`Downloading "${filename}"`);
+        } catch (error: any) {
+            console.error('Download error:', error);
+            toast.error(error.message || 'Failed to download document.');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     const handleDelete = (id: string, name: string) => {
         toast.warning(`Are you sure you want to delete "${name}"? This cannot be undone.`, {
@@ -152,16 +71,13 @@ export function ManageDocuments() {
                     error: (err) => err.data?.message || 'Failed to delete document.',
                 });
             }},
-            // cancel: { label: "Cancel" },
             duration: 10000,
         });
     };
     
-    // This function is passed to the uploader to invalidate the cache on success
     const onUploadComplete = () => {
         setShowResumeUploader(false);
         setShowCoverLetterUploader(false);
-        // Invalidate the 'Document' tag to force a refetch of the document list
         dispatch(documentApiSlice.util.invalidateTags(['Document']));
     };
 
@@ -190,7 +106,7 @@ export function ManageDocuments() {
                             {showResumeUploader && <DocumentUploader type="RESUME" onUploadComplete={onUploadComplete}/>}
                             <div className="mt-2 space-y-2">
                                 {resumes.map(doc => (
-                                    <div key={doc.id} className="flex justify-between items-center p-3 border rounded-md bg-background">
+                                    <div key={doc.id} className="flex justify-between items-center p-3 border rounded-md bg-background hover:bg-muted/50 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <FileText className="h-4 w-4 text-muted-foreground"/>
                                             <div>
@@ -198,9 +114,30 @@ export function ManageDocuments() {
                                                 {doc.latexSource && <p className="text-xs text-green-600 font-semibold">LaTeX Source Attached</p>}
                                             </div>
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(doc.id, doc.filename)} disabled={isDeleting}>
-                                            <Trash2 className="h-4 w-4 text-destructive hover:text-red-700" />
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDownload(doc.id, doc.filename)}
+                                                disabled={downloadingId === doc.id}
+                                                title="Download document"
+                                            >
+                                                {downloadingId === doc.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin text-brand-primary" />
+                                                ) : (
+                                                    <Download className="h-4 w-4 text-brand-primary hover:text-brand-secondary" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(doc.id, doc.filename)}
+                                                disabled={isDeleting}
+                                                title="Delete document"
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive hover:text-red-700" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                                 {resumes.length === 0 && !showResumeUploader && <p className="text-sm text-muted-foreground text-center py-4">No resumes uploaded yet.</p>}
@@ -218,14 +155,35 @@ export function ManageDocuments() {
                             {showCoverLetterUploader && <DocumentUploader type="COVER_LETTER" onUploadComplete={onUploadComplete} />}
                              <div className="mt-2 space-y-2">
                                 {coverLetters.map(doc => (
-                                    <div key={doc.id} className="flex justify-between items-center p-3 border rounded-md bg-background">
+                                    <div key={doc.id} className="flex justify-between items-center p-3 border rounded-md bg-background hover:bg-muted/50 transition-colors">
                                         <div className="flex items-center gap-2">
                                             <FileText className="h-4 w-4 text-muted-foreground"/>
                                             <p className="font-medium">{doc.filename}</p>
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(doc.id, doc.filename)} disabled={isDeleting}>
-                                            <Trash2 className="h-4 w-4 text-destructive hover:text-red-700" />
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDownload(doc.id, doc.filename)}
+                                                disabled={downloadingId === doc.id}
+                                                title="Download document"
+                                            >
+                                                {downloadingId === doc.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin text-brand-primary" />
+                                                ) : (
+                                                    <Download className="h-4 w-4 text-brand-primary hover:text-brand-secondary" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(doc.id, doc.filename)}
+                                                disabled={isDeleting}
+                                                title="Delete document"
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive hover:text-red-700" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                                 {coverLetters.length === 0 && !showCoverLetterUploader && <p className="text-sm text-muted-foreground text-center py-4">No cover letters uploaded yet.</p>}

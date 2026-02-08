@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: job-tracker
+  labels:
+    name: job-tracker
+    environment: development

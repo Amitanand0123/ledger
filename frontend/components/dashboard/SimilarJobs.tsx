@@ -1,10 +1,9 @@
-'use-client';
+'use client';
 
 import { useFindSimilarJobsQuery } from '@/lib/redux/slices/jobsApiSlice';
 import { Loader2, Telescope } from 'lucide-react';
 import { JobApplication } from '@/lib/types';
 
-// A compact card to show similar job results
 function SimilarJobCard({ job }: { job: JobApplication }) {
     return (
         <div className="p-3 border rounded-md bg-background hover:bg-muted/50 transition-colors">

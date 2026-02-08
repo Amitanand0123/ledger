@@ -7,19 +7,8 @@ import {
 
 const router = Router();
 
-// All platform routes are protected.
 router.use(protect);
 
-/**
- * @route   GET /api/v1/platforms
- * @desc    Get/search for job platforms
- * @access  Private
- */
-/**
- * @route   POST /api/v1/platforms
- * @desc    Create a new job platform
- * @access  Private
- */
 router.route('/').get(getPlatforms).post(createPlatform);
 
 export default router;

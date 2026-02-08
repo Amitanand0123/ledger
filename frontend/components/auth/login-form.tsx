@@ -74,13 +74,13 @@ export function LoginForm() {
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email</Label>
-          <Input id="email" type="email" {...register('email')} placeholder="name@example.com" className="focus-visible:ring-brand-primary" />
+          <Label htmlFor="email" className="text-content-primary">Email</Label>
+          <Input id="email" type="email" {...register('email')} placeholder="name@example.com" />
           {errors.email && <p className="text-sm text-red-500 dark:text-red-400">{errors.email.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">Password</Label>
-          <Input id="password" type="password" {...register('password')} placeholder="••••••••" className="focus-visible:ring-brand-primary" />
+          <Label htmlFor="password" className="text-content-primary">Password</Label>
+          <Input id="password" type="password" {...register('password')} placeholder="••••••••" />
           {errors.password && <p className="text-sm text-red-500 dark:text-red-400">{errors.password.message}</p>}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>

@@ -3,21 +3,17 @@ import { JobApplication } from '@/lib/types';
 
 interface UIState {
   isJobFormModalOpen: boolean;
-  isJobDetailsModalOpen: boolean;
   isCustomFieldModalOpen: boolean;
-  isDescriptionModalOpen: boolean; // New state for the description modal
+  isDescriptionModalOpen: boolean;
   editingJob: JobApplication | null;
-  viewingJob: JobApplication | null;
-  jobForDescriptionModal: JobApplication | null; // New state to hold the job for the modal
+  jobForDescriptionModal: JobApplication | null;
 }
 
 const initialState: UIState = {
   isJobFormModalOpen: false,
-  isJobDetailsModalOpen: false,
   isCustomFieldModalOpen: false,
   isDescriptionModalOpen: false,
   editingJob: null,
-  viewingJob: null,
   jobForDescriptionModal: null,
 };
 
@@ -35,17 +31,6 @@ const uiSlice = createSlice({
     setEditingJob: (state, action: PayloadAction<JobApplication | null>) => {
       state.editingJob = action.payload;
     },
-    
-    openJobDetailsModal: (state) => {
-        state.isJobDetailsModalOpen = true;
-    },
-    closeJobDetailsModal: (state) => {
-        state.isJobDetailsModalOpen = false;
-        state.viewingJob = null;
-    },
-    setViewingJob: (state, action: PayloadAction<JobApplication | null>) => {
-        state.viewingJob = action.payload;
-    },
 
     openCustomFieldModal: (state) => {
         state.isCustomFieldModalOpen = true;
@@ -54,7 +39,6 @@ const uiSlice = createSlice({
         state.isCustomFieldModalOpen = false;
     },
 
-    // New actions for the Description Modal
     openDescriptionModal: (state, action: PayloadAction<JobApplication>) => {
       state.isDescriptionModalOpen = true;
       state.jobForDescriptionModal = action.payload;
@@ -66,17 +50,14 @@ const uiSlice = createSlice({
   },
 });
 
-export const { 
-    openJobFormModal, 
-    closeJobFormModal, 
+export const {
+    openJobFormModal,
+    closeJobFormModal,
     setEditingJob,
-    openJobDetailsModal, 
-    closeJobDetailsModal, 
-    setViewingJob,
     openCustomFieldModal,
     closeCustomFieldModal,
-    openDescriptionModal, // Export new action
-    closeDescriptionModal, // Export new action
+    openDescriptionModal,
+    closeDescriptionModal,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

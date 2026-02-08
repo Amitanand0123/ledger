@@ -1,35 +1,46 @@
-import { prisma } from '../config/db.js';
-import { FieldType } from '@prisma/client';
+import { db } from '../db/client.js';
+import { customFields, fieldTypeEnum } from '../db/schema/index.js';
+import { eq, and, asc } from 'drizzle-orm';
 
-export const getFieldsForUser = (userId: string) => {
-    return prisma.customField.findMany({
-        where: { userId },
-        orderBy: { name: 'asc' },
-    });
+// Type inference from enum
+type FieldType = typeof fieldTypeEnum.enumValues[number];
+
+export const getFieldsForUser = async (userId: string) => {
+    return db
+        .select()
+        .from(customFields)
+        .where(eq(customFields.userId, userId))
+        .orderBy(asc(customFields.name));
 };
 
-export const createField = (userId: string, name: string, type: FieldType) => {
-    return prisma.customField.create({
-        data: {
+export const createField = async (userId: string, name: string, type: FieldType) => {
+    const [field] = await db
+        .insert(customFields)
+        .values({
             name,
             type,
             userId,
-        },
-    });
+        })
+        .returning();
+
+    return field;
 };
 
 export const deleteField = async (fieldId: string, userId: string) => {
-    // First, ensure the user owns this field to prevent unauthorized deletion.
-    const field = await prisma.customField.findFirst({
-        where: { id: fieldId, userId },
-    });
+    const [field] = await db
+        .select()
+        .from(customFields)
+        .where(and(eq(customFields.id, fieldId), eq(customFields.userId, userId)))
+        .limit(1);
 
     if (!field) {
         throw new Error('Custom field not found or user not authorized.');
     }
 
-    // Prisma's cascading delete will handle removing associated CustomFieldValue entries.
-    return prisma.customField.delete({
-        where: { id: fieldId },
-    });
+    const [deletedField] = await db
+        .delete(customFields)
+        .where(eq(customFields.id, fieldId))
+        .returning();
+
+    return deletedField;
 };

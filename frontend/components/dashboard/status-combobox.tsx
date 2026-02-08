@@ -8,18 +8,44 @@ import { useState } from 'react';
 import { Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
-const STATUS_OPTIONS: Status[] = ['PENDING', 'SHORTLISTED', 'OA', 'INTERVIEW_1', 'INTERVIEW_2', 'INTERVIEW_FINAL', 'HIRED', 'REJECTED'];
+const STATUS_OPTIONS: Status[] = [
+    'INTERESTED',
+    'PREPARING',
+    'READY_TO_APPLY',
+    'APPLIED',
+    'OA',
+    'INTERVIEW',
+    'OFFER',
+    'ACCEPTED',
+    'REJECTED',
+    'WITHDRAWN',
+];
 const FILTER_STATUS_OPTIONS: (Status | 'ALL')[] = ['ALL', ...STATUS_OPTIONS];
 
+const statusDescriptions: Record<string, string> = {
+    INTERESTED: 'Found a job you want to apply to',
+    PREPARING: 'Working on application materials',
+    READY_TO_APPLY: 'Application optimized and ready',
+    APPLIED: 'Application submitted',
+    OA: 'Online assessment received',
+    INTERVIEW: 'Interview scheduled',
+    OFFER: 'Job offer received',
+    ACCEPTED: 'Offer accepted',
+    REJECTED: 'Application rejected',
+    WITHDRAWN: 'Withdrew application',
+};
+
 const statusColorMap: Record<string, string> = {
-    PENDING: 'bg-gray-400 text-gray-900',
-    SHORTLISTED: 'bg-[#A4CCD9] text-gray-900',
-    OA: 'bg-yellow-500 text-white',
-    INTERVIEW_1: 'bg-[#8DBCC7] text-white',
-    INTERVIEW_2: 'bg-[#8DBCC7]/80 text-white',
-    INTERVIEW_FINAL: 'bg-[#8DBCC7]/60 text-white',
-    HIRED: 'bg-green-500 text-white',
-    REJECTED: 'bg-red-600 text-white',
+    INTERESTED: 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    PREPARING: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    READY_TO_APPLY: 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    APPLIED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    OA: 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    INTERVIEW: 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    OFFER: 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    ACCEPTED: 'bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+    REJECTED: 'bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+    WITHDRAWN: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     ALL: 'bg-muted text-muted-foreground',
 };
 
@@ -53,19 +79,17 @@ export function StatusCombobox({ currentStatus, onStatusChange, isFilter = false
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                {/* FIXED: Added fixed width to the button */}
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-[130px] justify-between p-0 border-none bg-transparent hover:bg-transparent">
+                <Button variant="outline" role="combobox" aria-expanded={open} className="w-[160px] justify-between p-0 border-none bg-transparent hover:bg-transparent">
                     <Badge className={`w-full justify-between px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
                         {isFilter && currentStatus === 'ALL' ? 'All Statuses' : triggerText}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Badge>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
+            <PopoverContent className="w-[200px] p-0" onWheel={(e) => e.stopPropagation()}>
                 <Command>
                     <CommandInput placeholder="Search or add..." onValueChange={setSearchValue} />
-                    <CommandList>
-                        {/* FIXED: Allow adding custom status */}
+                    <CommandList className="scroll-smooth">
                         <CommandEmpty>
                             <CommandItem onSelect={() => handleSelect(searchValue)} className="cursor-pointer">
                                 <PlusCircle className="mr-2 h-4 w-4"/> Add: &ldquo;{searchValue}&ldquo;
@@ -73,10 +97,17 @@ export function StatusCombobox({ currentStatus, onStatusChange, isFilter = false
                         </CommandEmpty>
                         <CommandGroup>
                             {options.map(status => (
-                                <CommandItem key={status} value={status} onSelect={() => handleSelect(status)} className="cursor-pointer">
-                                    <Check className={`mr-2 h-4 w-4 ${currentStatus === status ? 'opacity-100' : 'opacity-0'}`} />
-                                    <span className={`h-2 w-2 rounded-full mr-2 ${getStatusColor(status)}`}></span>
-                                    {status === 'ALL' ? 'All Statuses' : status.replace(/_/g, ' ')}
+                                <CommandItem key={status} value={status} onSelect={() => handleSelect(status)} className="cursor-pointer flex-col items-start py-3">
+                                    <div className="flex items-center w-full">
+                                        <Check className={`mr-2 h-4 w-4 ${currentStatus === status ? 'opacity-100' : 'opacity-0'}`} />
+                                        <span className={`h-2 w-2 rounded-full mr-2 ${getStatusColor(status)}`}></span>
+                                        <span className="font-medium">{status === 'ALL' ? 'All Statuses' : status.replace(/_/g, ' ')}</span>
+                                    </div>
+                                    {status !== 'ALL' && statusDescriptions[status] && (
+                                        <span className="text-xs text-muted-foreground ml-6 mt-0.5">
+                                            {statusDescriptions[status]}
+                                        </span>
+                                    )}
                                 </CommandItem>
                             ))}
                         </CommandGroup>

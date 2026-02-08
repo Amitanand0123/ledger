@@ -34,7 +34,6 @@ export function PlatformCombobox({ value, onChange }: PlatformComboboxProps) {
         setSearch('');
     };
 
-    // Combine predefined platforms with fetched platforms, removing duplicates
     const allPlatforms = new Set([...PREDEFINED_PLATFORMS, ...(fetchedPlatforms?.map(p => p.name) || [])]);
     const platformList = Array.from(allPlatforms).sort();
 

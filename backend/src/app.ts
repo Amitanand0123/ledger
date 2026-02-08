@@ -4,11 +4,11 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/error.middleware.js';
 import apiRoutes from './api/index.js';
+import healthRoutes from './api/routes/health.routes.js';
 import config from './config/index.js';
 
 const app: Express = express();
 
-const CHROME_EXTENSION_ID = "YOUR_CHROME_EXTENSION_ID_HERE";
 
 app.use(helmet());
 
@@ -16,7 +16,6 @@ app.use(
     cors({
         origin: [
             config.clientUrl,
-            `chrome-extension://${CHROME_EXTENSION_ID}`,
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
         allowedHeaders: [
@@ -41,9 +40,8 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).send('Web service is alive');
-});
+// Health check endpoints (before rate limiting)
+app.use('/', healthRoutes);
 
 app.use('/api/v1', apiRoutes);
 

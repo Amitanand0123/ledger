@@ -41,7 +41,8 @@ export function JobFormModal() {
     resolver: zodResolver(jobFormSchema),
     defaultValues: {
       company: '', position: '', location: '', salary: '', url: '',
-      description: '', status: 'PENDING', platformName: '',
+      description: '', status: 'INTERESTED', platformName: '',
+      deadline: undefined,
       resumeId: undefined, coverLetterId: undefined,
     },
   });
@@ -52,13 +53,15 @@ export function JobFormModal() {
         company: editingJob.company || '', position: editingJob.position || '',
         location: editingJob.location || '', salary: editingJob.salary || '',
         url: editingJob.url || '', description: editingJob.description || '',
-        status: editingJob.status || 'PENDING', platformName: editingJob.platform?.name || '',
+        status: editingJob.status || 'INTERESTED', platformName: editingJob.platform?.name || '',
+        deadline: editingJob.deadline ? new Date(editingJob.deadline).toISOString().split('T')[0] : undefined,
         resumeId: editingJob.resumeId || undefined, coverLetterId: editingJob.coverLetterId || undefined,
       });
     } else {
       reset({
         company: '', position: '', location: '', salary: '', url: '',
-        description: '', status: 'PENDING', platformName: '',
+        description: '', status: 'INTERESTED', platformName: '',
+        deadline: undefined,
         resumeId: undefined, coverLetterId: undefined,
       });
     }
@@ -90,22 +93,22 @@ export function JobFormModal() {
 
   return (
     <Dialog open={isJobFormModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw]">
         <DialogHeader>
           <DialogTitle>{editingJob ? 'Edit' : 'Add New'} Job Application</DialogTitle>
           <DialogDescription>{editingJob ? 'Update the details for this application.' : 'Fill in the details to track a new job.'}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 py-4 max-h-[calc(90vh-180px)] overflow-y-auto pr-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><Label htmlFor="company">Company</Label><Input id="company" {...register('company')} />{errors.company && <p className="text-sm text-destructive">{errors.company.message}</p>}</div>
-                <div><Label htmlFor="position">Position / Role</Label><Input id="position" {...register('position')} />{errors.position && <p className="text-sm text-destructive">{errors.position.message}</p>}</div>
+                <div className="space-y-2"><Label htmlFor="company">Company</Label><Input id="company" {...register('company')} />{errors.company && <p className="text-sm text-destructive">{errors.company.message}</p>}</div>
+                <div className="space-y-2"><Label htmlFor="position">Position / Role</Label><Input id="position" {...register('position')} />{errors.position && <p className="text-sm text-destructive">{errors.position.message}</p>}</div>
             </div>
-            
-            <div><Label htmlFor="location">Location</Label><Input id="location" {...register('location')} placeholder="e.g., San Francisco, CA or Remote" />{errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}</div>
-            
+
+            <div className="space-y-2"><Label htmlFor="location">Location</Label><Input id="location" {...register('location')} placeholder="e.g., San Francisco, CA or Remote" />{errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}</div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><Label htmlFor="salary">Salary / Stipend</Label><Input id="salary" {...register('salary')} placeholder="e.g., $120,000/year" /></div>
-                <div>
+                <div className="space-y-2"><Label htmlFor="salary">Salary / Stipend</Label><Input id="salary" {...register('salary')} placeholder="e.g., $120,000/year" /></div>
+                <div className="space-y-2">
                   <Label htmlFor="platformName">Platform</Label>
                   <Controller
                     control={control}
@@ -119,10 +122,11 @@ export function JobFormModal() {
                   />
                 </div>
             </div>
-            
-            <div><Label htmlFor="status">Status</Label><Controller control={control} name="status" render={({ field }) => <StatusCombobox currentStatus={field.value} onStatusChange={field.onChange} />} />{errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}</div>
-            <div><Label htmlFor="url">Job Listing Link</Label><Input id="url" {...register('url')} type="url" />{errors.url && <p className="text-sm text-destructive">{errors.url.message}</p>}</div>
-            <div><Label htmlFor="description">Job Description</Label><Textarea id="description" {...register('description')} /></div>
+
+            <div className="space-y-2"><Label htmlFor="status">Status</Label><Controller control={control} name="status" render={({ field }) => <StatusCombobox currentStatus={field.value} onStatusChange={field.onChange} />} />{errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}</div>
+            <div className="space-y-2"><Label htmlFor="url">Job Listing Link</Label><Input id="url" {...register('url')} type="url" />{errors.url && <p className="text-sm text-destructive">{errors.url.message}</p>}</div>
+            <div className="space-y-2"><Label htmlFor="deadline">Application Deadline (Optional)</Label><Input id="deadline" {...register('deadline')} type="date" placeholder="Select deadline" />{errors.deadline && <p className="text-sm text-destructive">{errors.deadline.message}</p>}</div>
+            <div className="space-y-2"><Label htmlFor="description">Job Description</Label><Textarea id="description" {...register('description')} /></div>
 
             <div className="space-y-4 rounded-md border p-4">
                 <h4 className="text-sm font-medium">Documents</h4>

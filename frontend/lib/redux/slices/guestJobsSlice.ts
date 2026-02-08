@@ -7,8 +7,8 @@ interface GuestJobsState {
 }
 
 const demoJobs: JobApplication[] = [
-    { id: nanoid(), company: 'Innovate LLC', position: 'Full Stack Engineer', location: 'New York, NY', status: 'Interview 1', order: 0, applicationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), userId: 'guest', salary: '$140,000/year', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: nanoid(), company: 'DemoCorp', position: 'Frontend Developer', location: 'Remote', status: 'Pending', order: 1, applicationDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), userId: 'guest', salary: '$125,000/year', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: nanoid(), company: 'Innovate LLC', position: 'Full Stack Engineer', location: 'New York, NY', status: 'INTERVIEW', order: 0, applicationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), userId: 'guest', salary: '$140,000/year', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: nanoid(), company: 'DemoCorp', position: 'Frontend Developer', location: 'Remote', status: 'INTERESTED', order: 1, applicationDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), userId: 'guest', salary: '$125,000/year', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     { id: nanoid(), company: 'DataSolutions', position: 'Data Analyst', location: 'Chicago, IL', status: 'OA', order: 2, applicationDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), userId: 'guest', salary: '$95,000/year', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
 ];
 
@@ -49,8 +49,11 @@ const guestJobsSlice = createSlice({
         deleteGuestJob: (state, action: PayloadAction<string>) => {
             state.jobs = state.jobs.filter(job => job.id !== action.payload);
         },
+        clearGuestJobs: (state) => {
+            state.jobs = [];
+        },
     },
 });
 
-export const { addGuestJob, updateGuestJob, deleteGuestJob } = guestJobsSlice.actions;
+export const { addGuestJob, updateGuestJob, deleteGuestJob, clearGuestJobs } = guestJobsSlice.actions;
 export default guestJobsSlice.reducer;

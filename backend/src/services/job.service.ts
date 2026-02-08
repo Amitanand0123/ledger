@@ -1,21 +1,29 @@
-import { prisma } from '../config/db.js';
-import { Prisma } from '@prisma/client';
-import * as TeamService from './team.service.js';
+import { db } from '../db/client.js';
+import {
+    jobApplications,
+    statusHistory,
+    jobPlatforms,
+    documents,
+    interviews,
+    notes,
+    users,
+    jobStatusEnum,
+} from '../db/schema/index.js';
+import { eq, and, or, gte, lte, ilike, asc, desc, inArray, notInArray, SQL, sql } from 'drizzle-orm';
 import app from '../app.js';
 import { parseSalary } from '../utils/salaryParser.js';
 import { sendEmail } from './email.service.js';
 import { createPlatform } from './platform.service.js';
 import { getTextFromS3 } from './s3.service.js';
 import config from '../config/index.js';
-import expressAsyncHandler from 'express-async-handler';
 import { logger } from '@/utils/logger.js';
+import { NotFoundError, ForbiddenError, ValidationError } from '@/utils/ApiError.js';
 
-const onJobDataChange = (userId: string, teamId?: string | null) => {
+const onJobDataChange = (userId: string) => {
     const io = app.get('io');
     if (io) {
         const eventName = 'jobs_updated';
-        if (teamId) io.to(`team_${teamId}`).emit(eventName, { teamId });
-        else io.to(userId).emit(eventName, { userId });
+        io.to(userId).emit(eventName, { userId });
     }
 };
 
@@ -27,143 +35,197 @@ type JobFilters = {
     salaryMax?: string;
     startDate?: string;
     endDate?: string;
+    page?: string;
+    limit?: string;
 };
 
-// Common include object to ensure we always get related data
-const jobInclude = {
-    platform: true,
-    resume: true,
-    coverLetter: true,
-};
-
-export const getAllJobs = async (userId: string, teamId: string | undefined, filters: JobFilters = {}) => {
-    if (teamId) {
-        const permission = await TeamService.checkUserTeamPermission(userId, teamId);
-        if (!permission) throw new Error("Access denied: You are not a member of this team.");
-    }
-
-    const where: Prisma.JobApplicationWhereInput = {
-        teamId: teamId ?? null,
-        ...(!teamId && { userId: userId }),
-    };
+export const getAllJobs = async (userId: string, filters: JobFilters = {}) => {
+    const conditions: SQL[] = [eq(jobApplications.userId, userId)];
 
     if (filters.search) {
-        where.OR = [
-            { company: { contains: filters.search, mode: 'insensitive' } },
-            { position: { contains: filters.search, mode: 'insensitive' } },
-        ];
+        conditions.push(
+            or(
+                ilike(jobApplications.company, `%${filters.search}%`),
+                ilike(jobApplications.position, `%${filters.search}%`)
+            )!
+        );
     }
-    
-    if (filters.status && filters.status !== 'ALL') where.status = filters.status;
-    if (filters.location) where.location = { contains: filters.location, mode: 'insensitive' };
-    if (filters.salaryMin) where.salaryMin = { gte: parseInt(filters.salaryMin, 10) };
-    if (filters.salaryMax) where.salaryMax = { lte: parseInt(filters.salaryMax, 10) };
+
+    if (filters.status && filters.status !== 'ALL') {
+        conditions.push(eq(jobApplications.status, filters.status as any));
+    }
+
+    if (filters.location) {
+        conditions.push(ilike(jobApplications.location, `%${filters.location}%`));
+    }
+
+    if (filters.salaryMin) {
+        conditions.push(gte(jobApplications.salaryMin, parseInt(filters.salaryMin, 10)));
+    }
+
+    if (filters.salaryMax) {
+        conditions.push(lte(jobApplications.salaryMax, parseInt(filters.salaryMax, 10)));
+    }
 
     if (filters.startDate) {
-        where.applicationDate = {
-            ...where.applicationDate as Prisma.DateTimeFilter,
-            gte: new Date(filters.startDate),
-        };
+        conditions.push(gte(jobApplications.applicationDate, new Date(filters.startDate)));
     }
+
     if (filters.endDate) {
-        where.applicationDate = {
-            ...where.applicationDate as Prisma.DateTimeFilter,
-            lte: new Date(filters.endDate),
-        };
+        conditions.push(lte(jobApplications.applicationDate, new Date(filters.endDate)));
     }
-    
-    return prisma.jobApplication.findMany({
-        where,
-        orderBy: { order: 'asc' },
-        include: jobInclude, // FIXED: Include related documents
-    });
+
+    const whereClause = and(...conditions);
+
+    const page = Math.max(1, parseInt(filters.page || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(filters.limit || '20', 10) || 20));
+    const offset = (page - 1) * limit;
+
+    const [data, totalResult] = await Promise.all([
+        db.query.jobApplications.findMany({
+            where: whereClause,
+            orderBy: asc(jobApplications.order),
+            limit,
+            offset,
+            with: {
+                platform: true,
+                resume: true,
+                coverLetter: true,
+                interviews: {
+                    orderBy: asc(interviews.scheduledAt),
+                },
+                notes: {
+                    orderBy: [desc(notes.isPinned), desc(notes.createdAt)],
+                },
+            },
+        }),
+        db.select({ count: sql<number>`count(*)` }).from(jobApplications).where(whereClause!),
+    ]);
+
+    const total = Number(totalResult[0]?.count || 0);
+
+    return {
+        data,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
 };
 
 export const getJobById = async (jobId: string, userId: string) => {
-    const job = await prisma.jobApplication.findUnique({
-        where: { id: jobId },
-        include: { ...jobInclude, statusHistory: { orderBy: { changedAt: 'asc' } } } // FIXED: Include related documents
+    const job = await db.query.jobApplications.findFirst({
+        where: eq(jobApplications.id, jobId),
+        with: {
+            platform: true,
+            resume: true,
+            coverLetter: true,
+            interviews: {
+                orderBy: asc(interviews.scheduledAt),
+            },
+            notes: {
+                orderBy: [desc(notes.isPinned), desc(notes.createdAt)],
+            },
+            statusHistory: {
+                orderBy: asc(statusHistory.changedAt),
+            },
+        },
     });
-    if (!job) return null;
-    if (job.teamId) {
-        const permission = await TeamService.checkUserTeamPermission(userId, job.teamId);
-        if (!permission) throw new Error("Permission denied: You cannot view this team's job.");
-    } else {
-        if (job.userId !== userId) throw new Error("Permission denied: You do not own this job application.");
-    }
+
+    if (!job) throw new NotFoundError('Job');
+    if (job.userId !== userId) throw new ForbiddenError('You do not own this job application.');
     return job;
 };
 
-export const createJob = async (userId: string, teamId: string | undefined, data: any) => {
-    if (teamId) {
-        const permission = await TeamService.checkUserTeamPermission(userId, teamId);
-        if (!permission || !['OWNER', 'EDITOR'].includes(permission)) throw new Error("Permission denied: You cannot add jobs to this team.");
-    }
-    
-    const { salary, platformName, ...restOfData } = data;
+export const createJob = async (userId: string, data: any) => {
+    const { salary, platformName, deadline, ...restOfData } = data;
     const { min, max } = parseSalary(salary);
-    
+
     let platformId = null;
     if (platformName) {
         const platform = await createPlatform(platformName);
         platformId = platform.id;
     }
 
-    const newJob = await prisma.jobApplication.create({
-        data: {
-            ...restOfData,
-            salary,
-            salaryMin: min,
-            salaryMax: max,
-            userId,
-            teamId: teamId ?? null,
-            platformId,
-            statusHistory: { create: [{ status: data.status || 'PENDING' }] }
-        },
-        include: jobInclude,
+    // Create job using transaction
+    const newJob = await db.transaction(async (tx) => {
+        const [job] = await tx
+            .insert(jobApplications)
+            .values({
+                ...restOfData,
+                salary,
+                deadline: deadline ? new Date(deadline) : null,
+                salaryMin: min,
+                salaryMax: max,
+                userId,
+                platformId,
+            })
+            .returning();
+
+        // Create initial status history
+        await tx.insert(statusHistory).values({
+            jobId: job.id,
+            status: data.status || 'INTERESTED',
+        });
+
+        // Fetch job with all relations
+        return tx.query.jobApplications.findFirst({
+            where: eq(jobApplications.id, job.id),
+            with: {
+                platform: true,
+                resume: true,
+                coverLetter: true,
+                interviews: {
+                    orderBy: asc(interviews.scheduledAt),
+                },
+                notes: {
+                    orderBy: [desc(notes.isPinned), desc(notes.createdAt)],
+                },
+            },
+        });
     });
-    if (newJob.description) {
+
+    if (newJob && newJob.description) {
         embedJobDescription(newJob.id, newJob.description, newJob.userId);
     }
 
-    onJobDataChange(userId, teamId);
+    onJobDataChange(userId);
     return newJob;
 };
 
 export const updateJob = async (jobId: string, userId: string, data: any) => {
     const jobToUpdate = await getJobById(jobId, userId);
-    if (!jobToUpdate) throw new Error("Job not found or permission denied.");
 
-    // IMPORTANT: Prevent the original description from being overwritten by a summary
     if (data.description && data.summary) {
-        // If both are somehow sent, prioritize the new summary logic
-        // and ignore changes to the original description.
         delete data.description;
     }
 
-    const { platformName, resumeId, coverLetterId, ...restOfData } = data;
-    const updateData: Prisma.JobApplicationUpdateInput = { ...restOfData };
-    
-    // Transform platformName into a relational connect object
+    const { platformName, resumeId, coverLetterId, deadline, ...restOfData } = data;
+    const updateData: any = { ...restOfData };
+
+    if (deadline !== undefined) {
+        updateData.deadline = deadline ? new Date(deadline) : null;
+    }
+
     if (platformName) {
         const platform = await createPlatform(platformName);
-        updateData.platform = { connect: { id: platform.id } };
-    } else if (platformName === '' || platformName === null) { 
-        updateData.platform = { disconnect: true };
+        updateData.platformId = platform.id;
+    } else if (platformName === '' || platformName === null) {
+        updateData.platformId = null;
     }
 
-    // Transform resumeId into a relational connect/disconnect object
     if (resumeId) {
-        updateData.resume = { connect: { id: resumeId } };
-    } else if (resumeId === null) { // This handles un-setting the resume
-        updateData.resume = { disconnect: true };
+        updateData.resumeId = resumeId;
+    } else if (resumeId === null) {
+        updateData.resumeId = null;
     }
 
-    // Transform coverLetterId into a relational connect/disconnect object
     if (coverLetterId) {
-        updateData.coverLetter = { connect: { id: coverLetterId } };
-    } else if (coverLetterId === null) { // This handles un-setting the cover letter
-        updateData.coverLetter = { disconnect: true };
+        updateData.coverLetterId = coverLetterId;
+    } else if (coverLetterId === null) {
+        updateData.coverLetterId = null;
     }
 
     if (data.salary) {
@@ -172,89 +234,95 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
         updateData.salaryMax = max;
     }
 
-    // Trigger webhook and email on status change
+    // Handle status change and create status history
     if (data.status && data.status !== jobToUpdate.status) {
-        updateData.statusHistory = { create: [{ status: data.status }] };
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-
-        // Trigger webhook
-        await triggerWebhook(userId, "job.status.changed", {
-            job: {
-                id: jobId,
-                company: jobToUpdate.company,
-                position: jobToUpdate.position,
-                oldStatus: jobToUpdate.status,
-                newStatus: data.status,
-                url: jobToUpdate.url
-            },
-            user: { id: userId, name: user?.name }
+        await db.insert(statusHistory).values({
+            jobId,
+            status: data.status,
         });
-        
-        // Send email for important status changes
-        if (user && (data.status.toUpperCase().includes('INTERVIEW') || data.status.toUpperCase().includes('HIRED'))) {
-            const subject = data.status.toUpperCase().includes('HIRED') ? `Congratulations on your new role!` : `You have an interview!`;
+
+        const [user] = await db
+            .select({ email: users.email })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+        if (user && (data.status === 'INTERVIEW' || data.status === 'ACCEPTED')) {
+            const subject =
+                data.status === 'ACCEPTED' ? `Congratulations on your new role!` : `You have an interview!`;
             const textBody = `Your application for ${jobToUpdate.position} at ${jobToUpdate.company} is now: ${data.status}.`;
-            sendEmail({ to: user.email, subject, text: textBody, html: `<p>${textBody}</p>` });
+            // Fire-and-forget email with error handling
+            sendEmail({ to: user.email, subject, text: textBody, html: `<p>${textBody}</p>` }).catch((error) =>
+                logger.error(`Failed to send status update email to ${user.email}:`, error)
+            );
         }
     }
-    
-    const updatedJob = await prisma.jobApplication.update({ 
-        where: { id: jobId }, 
-        data: updateData,
-        include: { platform: true, resume: true, coverLetter: true },
+
+    const [updatedJob] = await db
+        .update(jobApplications)
+        .set(updateData)
+        .where(eq(jobApplications.id, jobId))
+        .returning();
+
+    // Fetch with relations
+    const jobWithRelations = await db.query.jobApplications.findFirst({
+        where: eq(jobApplications.id, jobId),
+        with: {
+            platform: true,
+            resume: true,
+            coverLetter: true,
+        },
     });
 
     if (data.description && data.description !== jobToUpdate.description) {
         embedJobDescription(updatedJob.id, updatedJob.description!, updatedJob.userId);
     }
 
-    onJobDataChange(userId, updatedJob.teamId);
-    return updatedJob;
+    onJobDataChange(userId);
+    return jobWithRelations;
 };
 
-
 export const deleteJob = async (jobId: string, userId: string) => {
-    const jobToDelete = await getJobById(jobId, userId);
-    if (!jobToDelete) throw new Error("Job not found or permission denied.");
-    const deletedJob = await prisma.jobApplication.delete({ where: { id: jobId } });
-    onJobDataChange(userId, deletedJob.teamId);
+    await getJobById(jobId, userId); // Validates ownership
+    const [deletedJob] = await db.delete(jobApplications).where(eq(jobApplications.id, jobId)).returning();
+    onJobDataChange(userId);
     return deletedJob;
 };
 
 export const deleteBulk = async (ids: string[], userId: string) => {
-    const result = await prisma.jobApplication.deleteMany({
-        where: {
-            id: { in: ids },
-            userId: userId,
-        }
-    });
+    const result = await db
+        .delete(jobApplications)
+        .where(and(inArray(jobApplications.id, ids), eq(jobApplications.userId, userId)))
+        .returning();
 
     onJobDataChange(userId);
-    return result;
-}
+    return { count: result.length };
+};
 
 export const analyzeMatch = async (userId: string, jobId: string, resumeId: string) => {
-    // 1. Verify user owns the job and the resume document
     const job = await getJobById(jobId, userId);
-    if (!job || !job.description) throw new Error('Job not found, has no description, or permission denied.');
+    if (!job.description) throw new ValidationError('Job has no description');
 
-    const resumeDoc = await prisma.document.findFirst({
-        where: { id: resumeId, userId: userId, type: 'RESUME' }
-    });
-    if (!resumeDoc) throw new Error('Resume not found or permission denied.');
+    const [resumeDoc] = await db
+        .select()
+        .from(documents)
+        .where(
+            and(eq(documents.id, resumeId), eq(documents.userId, userId), eq(documents.type, 'RESUME'))
+        )
+        .limit(1);
 
-    // 2. Get resume text from S3
+    if (!resumeDoc) throw new NotFoundError('Resume');
+
     const resumeText = await getTextFromS3(resumeDoc.fileKey);
-    if (!resumeText) throw new Error('Could not read resume file content.');
+    if (!resumeText) throw new ValidationError('Could not read resume file content');
 
-    // 3. Call AI service to analyze the resume
     const resumeAnalysisRes = await fetch(`${config.aiServiceUrl}/analyze-resume`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.aiServiceApiKey}`
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
         },
-        body: JSON.stringify({ resume_text: resumeText })
+        body: JSON.stringify({ resume_text: resumeText }),
     });
     if (!resumeAnalysisRes.ok) {
         const error = await resumeAnalysisRes.json();
@@ -262,20 +330,19 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
     }
     const resumeAnalysis = await resumeAnalysisRes.json();
 
-    // 4. Call AI service to get the final match analysis
     const matchAnalysisRes = await fetch(`${config.aiServiceUrl}/match-resume-to-job`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.aiServiceApiKey}`
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
         },
         body: JSON.stringify({
             resume_analysis: resumeAnalysis,
-            job_description_text: job.description
-        })
+            job_description_text: job.description,
+        }),
     });
     if (!matchAnalysisRes.ok) {
-         const error = await matchAnalysisRes.json();
+        const error = await matchAnalysisRes.json();
         throw new Error(`AI service failed to match job: ${error.detail}`);
     }
     const matchAnalysis = await matchAnalysisRes.json();
@@ -283,77 +350,71 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
     return matchAnalysis;
 };
 
-async function triggerWebhook(userId: string, eventType: string, payload: any) {
-    const webhook = await prisma.webhook.findUnique({
-        where: { userId_eventType: { userId, eventType } }
-    });
-    
-    if (webhook) {
-        try {
-            // Instead of fetching, we create a record in our new table.
-            await prisma.webhookJob.create({
-                data: {
-                    webhookId: webhook.id,
-                    payload: payload,
-                    status: 'PENDING',
-                }
-            });
-            logger.info(`Queued webhook job for user ${userId}, event: ${eventType}`);
-        } catch (error) {
-            logger.error(`Failed to queue webhook for user ${userId}:`, error);
-        }
-    }
-}
-
 async function embedJobDescription(jobId: string, description: string, userId: string) {
     try {
         logger.info(`Embedding job description for job ${jobId}, user ${userId}`);
-        await fetch(`${config.aiServiceUrl}/embed-job`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.aiServiceApiKey}`
+
+        const { retryWithBackoff } = await import('../utils/retry.js');
+
+        await retryWithBackoff(
+            async () => {
+                const response = await fetch(`${config.aiServiceUrl}/embed-job`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${config.aiServiceApiKey}`,
+                    },
+                    body: JSON.stringify({
+                        job_id: jobId,
+                        job_description: description,
+                        user_id: userId,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Embedding failed with status ${response.status}`);
+                }
+
+                return response;
             },
-            // --- MODIFIED: Pass user_id in the body ---
-            body: JSON.stringify({ 
-                job_id: jobId, 
-                job_description: description,
-                user_id: userId 
-            })
-        });
+            {
+                maxAttempts: 3,
+                initialDelay: 1000,
+                maxDelay: 5000,
+                backoffFactor: 2,
+            }
+        );
+
+        logger.info(`Successfully embedded job ${jobId}`);
     } catch (error) {
-        logger.error(`Failed to embed job ${jobId}. This will not block the user.`, error);
+        logger.error(`Failed to embed job ${jobId} after all retry attempts. This will not block the user.`, error);
     }
 }
 
 export const findSimilar = async (jobId: string, userId: string) => {
     const job = await getJobById(jobId, userId);
-    if (!job || !job.description) {
-        throw new Error("Source job not found or has no description.");
+    if (!job.description) {
+        throw new ValidationError('Source job has no description');
     }
-    
-    // Call AI Service
+
     const response = await fetch(`${config.aiServiceUrl}/find-similar-jobs`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.aiServiceApiKey}`
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
         },
-        body: JSON.stringify({ job_id: jobId, job_description: job.description })
+        body: JSON.stringify({ job_id: jobId, job_description: job.description }),
     });
-    if (!response.ok) throw new Error("Failed to fetch similar jobs from AI service.");
+    if (!response.ok) throw new Error('Failed to fetch similar jobs from AI service.');
 
     const similarJobIds = (await response.json()).map((j: any) => j.id);
 
     if (similarJobIds.length === 0) return [];
-    
-    // Fetch full job details from our DB for the returned IDs
-    return prisma.jobApplication.findMany({
-        where: {
-            id: { in: similarJobIds },
-            userId: userId, // Ensure user owns the results
+
+    return db.query.jobApplications.findMany({
+        where: and(inArray(jobApplications.id, similarJobIds), eq(jobApplications.userId, userId)),
+        with: {
+            platform: true,
         },
-        include: { platform: true }
     });
 };
-

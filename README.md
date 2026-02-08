@@ -5,7 +5,7 @@
 
 **The ultimate tool to manage and track your job applications with ease. Stop juggling spreadsheets and start landing interviews.**
 
-This full-stack monorepo application provides a beautiful, intuitive dashboard to track every stage of your job search, from initial application to final offer. It features a React/Next.js frontend, a robust Node.js/Express backend, an AI-powered analysis service, and a Chrome Extension for quickly saving jobs from the web.
+This full-stack monorepo application provides a beautiful, intuitive dashboard to track every stage of your job search, from initial application to final offer. It features a React/Next.js frontend, a robust Node.js/Express backend, and an AI-powered analysis service.
 
 ---
 
@@ -22,15 +22,12 @@ This full-stack monorepo application provides a beautiful, intuitive dashboard t
 *   **💼 Intuitive Job Board:** View all your applications in a clean, filterable, and sortable table.
 *   **🖱️ Drag-and-Drop Reordering:** Easily prioritize your applications by dragging them into your preferred order.
 *   **✅ Advanced Status Tracking:** Update job statuses with a simple, colorful combobox (Pending, OA, Interview, Hired, etc.).
-*   **🌐 Chrome Extension Clipper:** Quickly scrape and save job postings from LinkedIn, Indeed, and more directly to your board.
 *   **🧠 AI-Powered Insights:**
     *   **AI Career Coach:** Get personalized advice on how to tailor your resume for a specific job description.
     *   **AI Summary:** Generate an AI-powered summary of any job description to identify key skills and responsibilities.
     *   **AI Resume Rebuilder:** Automatically rewrite the content of your LaTeX resume to be perfectly tailored for a job and generate a new PDF.
 *   **📊 Rich User Dashboard:** Visualize your job search progress with statistics on applications over time and a funnel chart of your statuses.
 *   **📄 Secure Document Management:** Upload and associate resumes and cover letters with specific job applications via secure AWS S3 storage.
-*   **📅 Google Calendar Sync:** Connect your Google Calendar to schedule interviews directly from the app.
-*   **🔗 Automation & Integrations:** Sync your job board with Airtable or trigger custom workflows with Zapier webhooks.
 *   **🔐 Secure Authentication:** Full user authentication system with email/password registration and Google OAuth for easy sign-in.
 *   **📱 Fully Responsive Design:** A seamless experience on desktop, tablet, and mobile devices.
 *   **🌓 Light & Dark Mode:** Automatic theme switching to match your system preference.
@@ -52,7 +49,7 @@ This full-stack monorepo application provides a beautiful, intuitive dashboard t
 
 ### 🛠️ Tech Stack & Architecture
 
-This project is a monorepo managed with **npm workspaces**, consisting of four main services:
+This project is a monorepo managed with **npm workspaces**, consisting of three main services:
 
 #### **Frontend** (`/frontend`)
 -   **Framework:** [Next.js](https://nextjs.org/) 14 (App Router)
@@ -75,14 +72,7 @@ This project is a monorepo managed with **npm workspaces**, consisting of four m
 #### **AI Service** (`/ai-service`)
 -   **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python)
 -   **AI Integration:** [Google Gemini API](https://ai.google.dev/)
--   **Vector Search:** [Pinecone](https://www.pinecone.io/) for finding similar jobs.
--   **Tooling:** [LangChain](https://www.langchain.com/) & [LangGraph](https://langchain-ai.github.io/langgraph/) for building agentic workflows.
 -   **PDF Generation:** `pdflatex` integration for AI Resume Rebuilder.
-
-#### **Chrome Extension** (`/chrome-extension`)
--   **Platform:** Manifest V3
--   **Framework:** Vanilla JavaScript, HTML, CSS
--   **Functionality:** Scrapes job data from popular sites and sends it to the backend API.
 
 #### **DevOps & Deployment**
 -   **CI/CD:** [GitHub Actions](https://github.com/features/actions) for continuous integration and deployment.
@@ -106,7 +96,6 @@ Follow these steps to set up and run the entire project on your local machine.
 -   A PostgreSQL database running locally or on a service like Neon.
 -   An AWS S3 bucket with IAM user credentials.
 -   A Google Gemini API Key.
--   A Pinecone API Key and Environment.
 
 #### **1. Clone the Repository**
 ```bash
@@ -139,10 +128,8 @@ AI_SERVICE_URL=http://localhost:8000
 # A private key to secure backend-to-AI-service communication
 AI_SERVICE_API_KEY=a_shared_secret_between_services
 
-# Google OAuth Credentials (for GCal Sync)
-GCAL_CLIENT_ID=...
-GCAL_CLIENT_SECRET=...
-GCAL_REDIRECT_URI=http://localhost:5000/api/v1/gcal/oauth2callback
+# Google Gemini API Key (for AI features)
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 **b. AI Service (`/ai-service/.env`)**
@@ -150,12 +137,8 @@ GCAL_REDIRECT_URI=http://localhost:5000/api/v1/gcal/oauth2callback
 # The same private key from the backend .env
 AI_SERVICE_API_KEY=a_shared_secret_between_services
 
-# Your Pinecone credentials
-PINECONE_API_KEY=...
-PINECONE_INDEX_NAME=ledger
-
-# Your Google Gemini API Key
-GEMINI_API_KEY=...
+# Your Google API Key (Gemini)
+GOOGLE_API_KEY=your_gemini_api_key
 ```
 
 **c. Frontend (`/frontend/.env.local`)**

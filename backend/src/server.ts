@@ -4,22 +4,21 @@ import { logger } from './utils/logger.js';
 import { createServer } from 'http';
 import { initializeSocket } from './socket.js';
 import { initializeEmailService } from './services/email.service.js';
-import { processWebhookQueue } from './services/webhook.processor.js';
+import { initializeReminderCron } from './services/reminder.service.js';
+import { validateEnv } from './config/env.validation.js';
 
-const PORT = config.port || 5000;
+const PORT = Number(config.port) || 5000;
+
+// Validate environment variables before starting server
+validateEnv();
 
 async function startServer() {
-    // Create an HTTP server from the Express app instance
     const httpServer = createServer(app);
 
-    // Initialize the Socket.IO server and attach it to the HTTP server
     const io = initializeSocket(httpServer);
 
-    // Make the `io` instance globally accessible to other parts of the app (like services)
-    // by attaching it to the Express app object.
     app.set('io', io);
 
-    // Start all necessary background connections concurrently
     try {
         await initializeEmailService();
         logger.info('All background services connected successfully.');
@@ -28,15 +27,16 @@ async function startServer() {
             'Failed to connect to one or more background services:',
             error
         );
-        process.exit(1); // Exit if critical services can't connect
+        process.exit(1);
     }
 
-    // Start listening for incoming HTTP requests
-    httpServer.listen(PORT, () => {
-        logger.info(`🚀 Backend server is running on http://localhost:${PORT}`);
-        logger.info('Starting webhook queue processor...');
-        processWebhookQueue(); // Initial run
-        setInterval(processWebhookQueue, 60 * 1000); // Run every 60 seconds
+    // Initialize reminder cron job
+    initializeReminderCron();
+
+    const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+
+    httpServer.listen(PORT, HOST, () => {
+        logger.info(`Backend server is running on http://${HOST}:${PORT}`);
     });
 }
 

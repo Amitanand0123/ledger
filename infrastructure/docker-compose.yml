@@ -1,72 +1,65 @@
+# This is the BASE file for all environments.
 services:
-  # --- Backend Application ---
   backend:
     build:
-      context: ../backend
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-    volumes:
-      - ../backend:/app
-      - /app/node_modules
+      context: ..
+      dockerfile: backend/Dockerfile
     env_file:
       - ../backend/.env
+    environment:
+      NODE_ENV: production
+      # Override localhost URLs with Docker network hostnames
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/ledger
+      AI_SERVICE_URL: http://ai-service:8000
+      CLIENT_URL: http://localhost:3021
+    ports:
+      - "5100:5000"
     depends_on:
       - postgres
+      - ai-service
     networks:
       - app-network
 
-  # --- Frontend Application ---
   frontend:
     build:
-      context: ../frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: frontend/Dockerfile
       args:
-        # This build arg ensures the Next.js container knows how to reach the backend container
-        NEXT_PUBLIC_API_URL: http://backend:5000
+        # Baked into client-side JS — browser calls backend via host port
+        NEXT_PUBLIC_API_URL: http://localhost:5100
+    env_file:
+      - ../frontend/.env
+    environment:
+      HOSTNAME: 0.0.0.0
+      # Server-side API calls use Docker internal networking
+      INTERNAL_API_URL: http://backend:5000
+      NEXTAUTH_URL: http://localhost:3021
     ports:
       - "3021:3021"
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-      - /app/.next
-    env_file:
-      - ../frontend/.env.local
-    command: npm run dev # Use 'dev' for local development with hot-reloading
     depends_on:
       - backend
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://backend:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
 
-  # --- AI Service ---
   ai-service:
     build:
-      context: ../ai-service
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000" # Expose the FastAPI port
-    volumes:
-      - ../ai-service:/app
+      context: ..
+      dockerfile: ai-service/Dockerfile
     env_file:
       - ../ai-service/.env
+    ports:
+      - "8000:8000"
     networks:
       - app-network
 
-  # --- Database ---
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: jobtrackerdb
+      POSTGRES_DB: ledger
     ports:
-      - "5432:5432"
+      - "5400:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:

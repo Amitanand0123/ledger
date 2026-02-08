@@ -9,9 +9,7 @@ export const useSocket = (): Socket | null => {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        // Only run this effect if the user is authenticated.
         if (status === 'authenticated' && session?.accessToken) {
-            // Create the new socket connection.
             const newSocket = io(socketUrl, {
                 auth: {
                     token: session.accessToken,
