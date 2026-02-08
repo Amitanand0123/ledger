@@ -35,5 +35,3 @@
 **/*.pyd
 **/.Python
 
-# Lock file (optional: remove only if you don't want to commit lock files)
-package-lock.json
