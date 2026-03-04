@@ -110,7 +110,7 @@ async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
             except json.JSONDecodeError:
                 pass
         raise HTTPException(status_code=500, detail="Failed to parse AI response as JSON")
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="AI service encountered an internal error.")
 
 
