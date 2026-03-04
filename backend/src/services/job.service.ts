@@ -2,14 +2,12 @@ import { db } from '../db/client.js';
 import {
     jobApplications,
     statusHistory,
-    jobPlatforms,
     documents,
     interviews,
     notes,
     users,
-    jobStatusEnum,
 } from '../db/schema/index.js';
-import { eq, and, or, gte, lte, ilike, asc, desc, inArray, notInArray, SQL, sql } from 'drizzle-orm';
+import { eq, and, or, gte, lte, ilike, asc, desc, inArray, SQL, sql } from 'drizzle-orm';
 import app from '../app.js';
 import { parseSalary } from '../utils/salaryParser.js';
 import { sendEmail } from './email.service.js';
@@ -254,7 +252,7 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
 
         if (user && (data.status === 'INTERVIEW' || data.status === 'ACCEPTED')) {
             const subject =
-                data.status === 'ACCEPTED' ? `Congratulations on your new role!` : `You have an interview!`;
+                data.status === 'ACCEPTED' ? 'Congratulations on your new role!' : 'You have an interview!';
             const textBody = `Your application for ${jobToUpdate.position} at ${jobToUpdate.company} is now: ${data.status}.`;
             // Fire-and-forget email with error handling
             sendEmail({ to: user.email, subject, text: textBody, html: `<p>${textBody}</p>` }).catch((error) =>

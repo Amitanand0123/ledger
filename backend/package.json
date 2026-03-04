@@ -16,8 +16,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/scripts/seed.ts",
     "s3:setup-cors": "tsx scripts/setup-s3-cors.ts",
-    "lint": "eslint \"{src}/**/*.ts\" --fix",
-    "lint:check": "eslint \"{src}/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "lint:check": "eslint \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "test": "npm run lint:check && npm run type-check"
   },

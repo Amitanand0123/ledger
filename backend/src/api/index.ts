@@ -6,7 +6,7 @@ import jobsRoutes from './routes/jobs.routes.js';
 import platformRoutes from './routes/platform.routes.js';
 import uploadsRoutes from './routes/uploads.routes.js';
 import userRoutes from './routes/user.routes.js';
-import documentRoutes from  './routes/document.routes.js'
+import documentRoutes from  './routes/document.routes.js';
 import agentRoutes from './routes/agent.routes.js';
 import sharingRoutes from './routes/sharing.routes.js';
 import interviewRoutes from './routes/interview.routes.js';

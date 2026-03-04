@@ -45,7 +45,7 @@ app.use(
             'Authorization',
             'X-Requested-With',
             'Accept',
-            'Origin'
+            'Origin',
         ],
     })
 );

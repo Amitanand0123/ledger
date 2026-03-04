@@ -71,7 +71,7 @@ export const invokeAgent = async (userId: string, resumeId: string, jobId: strin
         try {
             const errorBody = JSON.parse(errorText);
             errorDetail = errorBody.detail || JSON.stringify(errorBody);
-        } catch (e) {}
+        } catch (_e) {}
         logger.error('AI Agent Invocation Failed:', errorDetail);
         throw new ApiError(502, `The AI agent failed to generate advice: ${errorDetail}`);
     }
@@ -112,7 +112,7 @@ export const rebuildResumeAndGeneratePdf = async (userId: string, resumeId: stri
     if (!aiResponse.ok) throw new Error('AI service failed to rebuild the resume.');
     const { modified_latex } = await aiResponse.json();
 
-    logger.info(`Requesting AI service to compile LaTeX to PDF`);
+    logger.info('Requesting AI service to compile LaTeX to PDF');
     const pdfResponse = await fetch(`${config.aiServiceUrl}/compile-latex-to-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.aiServiceApiKey}` },
@@ -179,7 +179,7 @@ export const rebuildResumeStandalone = async (userId: string, resumeId: string, 
     if (!aiResponse.ok) throw new Error('AI service failed to rebuild the resume.');
     const { modified_latex } = await aiResponse.json();
 
-    logger.info(`Requesting AI service to compile LaTeX to PDF (standalone)`);
+    logger.info('Requesting AI service to compile LaTeX to PDF (standalone)');
     const pdfResponse = await fetch(`${config.aiServiceUrl}/compile-latex-to-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.aiServiceApiKey}` },
@@ -190,7 +190,7 @@ export const rebuildResumeStandalone = async (userId: string, resumeId: string, 
     const pdfArrayBuffer = await pdfResponse.arrayBuffer();
     const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-    const newFilename = `Tailored_Resume.pdf`;
+    const newFilename = 'Tailored_Resume.pdf';
     const s3Client = new S3Client({
         region: config.aws.region,
         credentials: {

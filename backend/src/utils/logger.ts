@@ -33,8 +33,8 @@ function formatLogData(data?: Record<string, any>): string {
     if (!data || Object.keys(data).length === 0) return '';
     try {
         return ` ${JSON.stringify(data)}`;
-    } catch (error) {
-        return ` [Unserializable data]`;
+    } catch (_error) {
+        return ' [Unserializable data]';
     }
 }
 

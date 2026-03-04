@@ -12,7 +12,7 @@ import {
     createNoteSchema,
     updateNoteSchema,
     deleteNoteSchema,
-    getNotesByJobSchema
+    getNotesByJobSchema,
 } from '../../validation/note.schemas.js';
 
 const router = Router();

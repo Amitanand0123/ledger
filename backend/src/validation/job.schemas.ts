@@ -49,7 +49,7 @@ export const createJobSchema = z.object({
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
         platformName: z.string().optional().nullable(), // Allow platformName for frontend compatibility
         // Accept CUID2 string, null, undefined, or empty string
@@ -57,13 +57,13 @@ export const createJobSchema = z.object({
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
         coverLetterId: z.union([
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
     }).strict(), // No unknown fields allowed
 });
@@ -104,7 +104,7 @@ export const updateJobSchema = z.object({
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
         platformName: z.string().optional().nullable(), // Allow platformName for frontend compatibility
         // Accept CUID2 string, null, undefined, or empty string
@@ -112,13 +112,13 @@ export const updateJobSchema = z.object({
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
         coverLetterId: z.union([
             z.string().cuid2(),
             z.literal(''),
             z.null(),
-            z.undefined()
+            z.undefined(),
         ]).optional(),
     }).strict(),
 });

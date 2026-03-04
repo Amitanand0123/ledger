@@ -11,7 +11,7 @@ import { validate } from '../../middleware/validate.middleware.js';
 import {
     updateProfileSchema,
     changePasswordSchema,
-    completeOnboardingSchema
+    completeOnboardingSchema,
 } from '../../validation/user.schemas.js';
 
 const router = Router();

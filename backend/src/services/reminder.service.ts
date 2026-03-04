@@ -1,6 +1,6 @@
 import { db } from '../db/client.js';
 import { users, interviews, jobApplications } from '../db/schema/index.js';
-import { eq, and, gte, lt, notInArray, isNotNull, inArray, sql } from 'drizzle-orm';
+import { eq, and, gte, lt, notInArray, isNotNull, inArray } from 'drizzle-orm';
 import { sendEmail } from './email.service.js';
 import { logger } from '@/utils/logger.js';
 import cron from 'node-cron';

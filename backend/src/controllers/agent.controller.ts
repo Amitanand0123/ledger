@@ -8,7 +8,7 @@ export const invokeAiAgent = asyncHandler(async (req: any, res: Response) => {
     const { resumeId, jobId, userGoal } = req.body;
 
     if (!resumeId || !jobId || !userGoal) {
-        throw new ValidationError("resumeId, jobId, and userGoal are required.");
+        throw new ValidationError('resumeId, jobId, and userGoal are required.');
     }
 
     const result = await AgentService.invokeAgent(req.user.id, resumeId, jobId, userGoal);
@@ -18,7 +18,7 @@ export const invokeAiAgent = asyncHandler(async (req: any, res: Response) => {
 export const rebuildResume = asyncHandler(async (req: any, res: Response) => {
     const { resumeId, jobId } = req.body;
     if (!resumeId || !jobId) {
-        throw new ValidationError("resumeId and jobId are required.");
+        throw new ValidationError('resumeId and jobId are required.');
     }
     const result = await AgentService.rebuildResumeAndGeneratePdf(req.user.id, resumeId, jobId);
     sendSuccess(res, 200, result);

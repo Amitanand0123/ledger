@@ -1,6 +1,6 @@
 import { db } from '../db/client.js';
 import { interviews, jobApplications, interviewTypeEnum } from '../db/schema/index.js';
-import { eq, and, gte, asc, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, gte, asc, desc, inArray } from 'drizzle-orm';
 
 // Type inference from enum
 type InterviewType = typeof interviewTypeEnum.enumValues[number];

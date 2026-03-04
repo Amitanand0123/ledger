@@ -22,7 +22,7 @@ export async function retryWithBackoff<T>(
         maxAttempts = 3,
         initialDelay = 1000,
         maxDelay = 10000,
-        backoffFactor = 2
+        backoffFactor = 2,
     } = options;
 
     let lastError: Error;

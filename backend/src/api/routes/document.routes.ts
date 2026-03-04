@@ -5,7 +5,7 @@ import { createDocument, getDocuments, deleteDocument, getDocumentDownloadUrl } 
 import {
     createDocumentSchema,
     deleteDocumentSchema,
-    getDocumentDownloadUrlSchema
+    getDocumentDownloadUrlSchema,
 } from '../../validation/document.schemas.js';
 
 const router = Router();

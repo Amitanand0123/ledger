@@ -63,7 +63,7 @@ export const deleteBulkJobs = asyncHandler(
 
         sendSuccess(res, 200, null, { message: `${ids.length} jobs deleted successfully.` });
     }
-)
+);
 
 export const analyzeJobMatch = asyncHandler(async (req: any, res: Response) => {
     const { id: jobId } = req.params;

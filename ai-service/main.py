@@ -21,7 +21,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 AI_SERVICE_API_KEY = os.getenv("AI_SERVICE_API_KEY")
 
 if not GOOGLE_API_KEY or not AI_SERVICE_API_KEY:
-    raise ValueError("Missing required environment variables: GOOGLE_API_KEY and AI_SERVICE_API_KEY")
+    raise ValueError(
+        "Missing required environment variables: GOOGLE_API_KEY and AI_SERVICE_API_KEY"
+    )
 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 MODEL = "gemini-2.5-flash"
@@ -43,35 +45,47 @@ class EmbedJobRequest(BaseModel):
     user_id: str
     job_description: str
 
+
 class FindSimilarRequest(BaseModel):
     job_id: str
     job_description: str
     user_id: str = ""
+
 
 class SimilarJob(BaseModel):
     id: str
     description: str
     score: float
 
+
 class AnalyzeResumeRequest(BaseModel):
     resume_text: str
+
 
 class MatchResumeRequest(BaseModel):
     resume_analysis: dict
     job_description_text: str
 
+
 class MatchResponse(BaseModel):
     match_score: float = Field(description="Match percentage between 0-100")
-    matching_skills: List[str] = Field(description="Skills that match the job requirements")
-    missing_skills: List[str] = Field(description="Skills required by job but missing from resume")
+    matching_skills: List[str] = Field(
+        description="Skills that match the job requirements"
+    )
+    missing_skills: List[str] = Field(
+        description="Skills required by job but missing from resume"
+    )
     suggestions: str = Field(description="Actionable suggestions to improve match")
+
 
 class RebuildLatexRequest(BaseModel):
     latex_source: str
     job_description: str
 
+
 class CompileLatexRequest(BaseModel):
     latex_source: str
+
 
 class AgentRequest(BaseModel):
     user_id: str
@@ -90,11 +104,14 @@ async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
             config["response_mime_type"] = "application/json"
 
         loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(None, lambda: client.models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=config,
-        ))
+        response = await loop.run_in_executor(
+            None,
+            lambda: client.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+                config=config,
+            ),
+        )
 
         text = response.text
 
@@ -109,12 +126,17 @@ async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
                 return json.loads(json_match.group(1))
             except json.JSONDecodeError:
                 pass
-        raise HTTPException(status_code=500, detail="Failed to parse AI response as JSON")
+        raise HTTPException(
+            status_code=500, detail="Failed to parse AI response as JSON"
+        )
     except Exception:
-        raise HTTPException(status_code=500, detail="AI service encountered an internal error.")
+        raise HTTPException(
+            status_code=500, detail="AI service encountered an internal error."
+        )
 
 
 # --- Endpoints ---
+
 
 @app.get("/health")
 def health_check():
@@ -122,19 +144,25 @@ def health_check():
 
 
 @app.post("/embed-job")
-async def embed_job(request: EmbedJobRequest, authorized: bool = Security(verify_api_key)):
+async def embed_job(
+    request: EmbedJobRequest, authorized: bool = Security(verify_api_key)
+):
     """No-op: Vector DB removed. Returns success for backward compatibility."""
     return {"message": "Job processed successfully", "job_id": request.job_id}
 
 
 @app.post("/find-similar-jobs", response_model=List[SimilarJob])
-async def find_similar_jobs(request: FindSimilarRequest, authorized: bool = Security(verify_api_key)):
+async def find_similar_jobs(
+    request: FindSimilarRequest, authorized: bool = Security(verify_api_key)
+):
     """Returns empty list. Vector-based similarity search has been removed."""
     return []
 
 
 @app.post("/analyze-resume")
-async def analyze_resume(request: AnalyzeResumeRequest, authorized: bool = Security(verify_api_key)):
+async def analyze_resume(
+    request: AnalyzeResumeRequest, authorized: bool = Security(verify_api_key)
+):
     """Analyzes a resume and extracts structured information (skills and summary)."""
     prompt = f"""You are an expert HR analyst. Analyze the following resume text.
 
@@ -158,7 +186,9 @@ Return a JSON object with exactly these two keys: "skills" (array of strings) an
 
 
 @app.post("/match-resume-to-job")
-async def match_resume_to_job(request: MatchResumeRequest, authorized: bool = Security(verify_api_key)):
+async def match_resume_to_job(
+    request: MatchResumeRequest, authorized: bool = Security(verify_api_key)
+):
     """Matches a resume against a job description and provides detailed analysis."""
     skills = request.resume_analysis.get("skills", [])
     summary = request.resume_analysis.get("summary", "")
@@ -198,7 +228,9 @@ Analyze the match and return a JSON object with exactly these keys:
 
 
 @app.post("/rebuild-resume-latex")
-async def rebuild_resume_latex(request: RebuildLatexRequest, authorized: bool = Security(verify_api_key)):
+async def rebuild_resume_latex(
+    request: RebuildLatexRequest, authorized: bool = Security(verify_api_key)
+):
     """Uses Gemini to modify LaTeX resume content based on a job description."""
     prompt = f"""You are an expert resume writer who is fluent in LaTeX.
 Your task is to rewrite the content of the provided LaTeX resume to be perfectly tailored for the given job description.
@@ -241,7 +273,9 @@ Your task is to rewrite the content of the provided LaTeX resume to be perfectly
 
 
 @app.post("/compile-latex-to-pdf")
-async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = Security(verify_api_key)):
+async def compile_latex_to_pdf(
+    request: CompileLatexRequest, authorized: bool = Security(verify_api_key)
+):
     """Compiles LaTeX code into a PDF using pdflatex."""
     # Use manual temp directory so it persists until FileResponse finishes streaming
     tempdir = tempfile.mkdtemp()
@@ -256,7 +290,14 @@ async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = 
         # -no-shell-escape prevents \write18 command injection
         for _ in range(2):
             process = subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "-no-shell-escape", "-output-directory", tempdir, tex_path],
+                [
+                    "pdflatex",
+                    "-interaction=nonstopmode",
+                    "-no-shell-escape",
+                    "-output-directory",
+                    tempdir,
+                    tex_path,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -287,11 +328,15 @@ async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = 
         raise HTTPException(status_code=500, detail="LaTeX compilation timed out.")
     except Exception:
         shutil.rmtree(tempdir, ignore_errors=True)
-        raise HTTPException(status_code=500, detail="An error occurred during PDF compilation.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred during PDF compilation."
+        )
 
 
 @app.post("/agent/invoke")
-async def invoke_agent(request: AgentRequest, authorized: bool = Security(verify_api_key)):
+async def invoke_agent(
+    request: AgentRequest, authorized: bool = Security(verify_api_key)
+):
     """Provides career advice by analyzing resume against job description."""
     prompt = f"""You are a world-class career coach providing advice in a job tracking application.
 

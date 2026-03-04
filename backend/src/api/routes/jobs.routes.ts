@@ -7,7 +7,7 @@ import {
     deleteJobApplication,
     deleteBulkJobs,
     analyzeJobMatch,
-    findSimilarJobs
+    findSimilarJobs,
 } from '../../controllers/jobs.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
 import { validate } from '../../middleware/validate.middleware.js';

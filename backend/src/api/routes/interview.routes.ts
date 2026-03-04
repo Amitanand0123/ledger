@@ -14,7 +14,7 @@ import {
     updateInterviewSchema,
     deleteInterviewSchema,
     getInterviewsByJobSchema,
-    getUpcomingInterviewsSchema
+    getUpcomingInterviewsSchema,
 } from '../../validation/interview.schemas.js';
 
 const router = Router();
