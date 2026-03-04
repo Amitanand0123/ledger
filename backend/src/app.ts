@@ -12,15 +12,37 @@ const app: Express = express();
 
 app.use(helmet());
 
+const allowedOrigins = config.clientUrl
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
+
 app.use(
     cors({
-        origin: [
-            config.clientUrl,
-        ],
+        origin: (origin, callback) => {
+            if (
+                !origin ||
+                allowedOrigins.includes(origin) ||
+                // Allow Vercel preview deployments only for configured project slugs
+                allowedOrigins.some((allowed) => {
+                    if (!allowed.endsWith('.vercel.app') || !origin.endsWith('.vercel.app')) return false;
+                    // Extract the project slug from the allowed origin (e.g., "ledger-app" from "ledger-app-gamma.vercel.app")
+                    const allowedHost = allowed.replace(/^https?:\/\//, '');
+                    const projectSlug = allowedHost.split('.')[0].replace(/-[a-z0-9]+$/, '');
+                    const originHost = origin.replace(/^https?:\/\//, '');
+                    return originHost.startsWith(projectSlug);
+                })
+            ) {
+                callback(null, true);
+            } else {
+                callback(new Error(`CORS: origin ${origin} not allowed`));
+            }
+        },
+        credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
         allowedHeaders: [
-            'Content-Type', 
-            'Authorization', 
+            'Content-Type',
+            'Authorization',
             'X-Requested-With',
             'Accept',
             'Origin'

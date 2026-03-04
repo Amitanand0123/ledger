@@ -1,6 +1,6 @@
 import { db } from '../db/client.js';
 import { interviews, jobApplications, interviewTypeEnum } from '../db/schema/index.js';
-import { eq, and, gte, asc, desc } from 'drizzle-orm';
+import { eq, and, gte, asc, desc, inArray, sql } from 'drizzle-orm';
 
 // Type inference from enum
 type InterviewType = typeof interviewTypeEnum.enumValues[number];
@@ -60,10 +60,17 @@ export const getInterviewsForJob = async (jobId: string, userId: string) => {
 export const getUpcomingInterviews = async (userId: string, limit: number = 5) => {
     const now = new Date();
 
+    // Get user's job IDs first, then filter interviews at DB level instead of in-memory
+    const userJobIds = db
+        .select({ id: jobApplications.id })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
     const results = await db.query.interviews.findMany({
         where: and(
             gte(interviews.scheduledAt, now),
-            eq(interviews.completed, false)
+            eq(interviews.completed, false),
+            inArray(interviews.jobId, userJobIds)
         ),
         with: {
             job: {
@@ -77,15 +84,21 @@ export const getUpcomingInterviews = async (userId: string, limit: number = 5) =
             },
         },
         orderBy: asc(interviews.scheduledAt),
+        limit,
     });
 
-    return results
-        .filter((interview) => interview.job?.userId === userId)
-        .slice(0, limit);
+    return results;
 };
 
 export const getAllInterviews = async (userId: string) => {
+    // Get user's job IDs first, then filter interviews at DB level instead of in-memory
+    const userJobIds = db
+        .select({ id: jobApplications.id })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
     const results = await db.query.interviews.findMany({
+        where: inArray(interviews.jobId, userJobIds),
         with: {
             job: {
                 columns: {
@@ -100,7 +113,7 @@ export const getAllInterviews = async (userId: string) => {
         orderBy: desc(interviews.scheduledAt),
     });
 
-    return results.filter((interview) => interview.job?.userId === userId);
+    return results;
 };
 
 export const updateInterview = async (

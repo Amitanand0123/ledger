@@ -58,6 +58,7 @@ export function Navbar() {
         </Link>
         <NavLink href="/dashboard">Dashboard</NavLink>
         <NavLink href="/upcoming">Upcoming</NavLink>
+        <NavLink href="/resume-tools">Resume Tools</NavLink>
         <NavLink href="/stats">Statistics</NavLink>
         <NavLink href="/settings">Settings</NavLink>
       </nav>

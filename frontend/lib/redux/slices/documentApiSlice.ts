@@ -13,7 +13,7 @@ export interface UserDocument {
 export const documentApiSlice = createApi({
     reducerPath: 'documentApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/`,
+        baseUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/`,
         prepareHeaders: async (headers) => {
             const session = await getSession();
             if (session?.accessToken) {

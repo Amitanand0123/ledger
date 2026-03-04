@@ -11,7 +11,7 @@ interface CustomField {
 export const customFieldsApiSlice = createApi({
   reducerPath: 'customFieldsApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/`,
     prepareHeaders: async (headers) => {
       const session = await getSession();
       if (session?.accessToken) {

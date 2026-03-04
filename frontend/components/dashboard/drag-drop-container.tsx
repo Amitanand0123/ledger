@@ -28,10 +28,15 @@ interface DragDropContainerProps {
 export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: DragDropContainerProps) {
   const [activeJob, setActiveJob] = useState<JobApplication | null>(null);
   const [orderedJobs, setOrderedJobs] = useState(jobs);
+  const [mounted, setMounted] = useState(false);
   const [updateJob] = useUpdateJobMutation();
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
   const isGuest = !session;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setOrderedJobs(jobs);
@@ -63,15 +68,16 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
         const reorderedJobs = arrayMove(orderedJobs, oldIndex, newIndex);
         setOrderedJobs(reorderedJobs);
 
-        // Collect all update operations
+        // Capture correct order index BEFORE filtering, then filter for changed items
         const updates = reorderedJobs
-            .filter((job, index) => job.order !== index)
-            .map((job, index) => {
+            .map((job, index) => ({ job, newOrder: index }))
+            .filter(({ job, newOrder }) => job.order !== newOrder)
+            .map(({ job, newOrder }) => {
                 if (isGuest) {
-                    dispatch(updateGuestJob({ id: job.id, order: index }));
+                    dispatch(updateGuestJob({ id: job.id, order: newOrder }));
                     return Promise.resolve();
                 } else {
-                    return updateJob({ id: job.id, order: index }).unwrap();
+                    return updateJob({ id: job.id, order: newOrder }).unwrap();
                 }
             });
 
@@ -92,8 +98,8 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
         <SortableContext items={jobsId} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
             {orderedJobs.map((job, index) => (
-              <JobCard 
-                key={job.id} 
+              <JobCard
+                key={job.id}
                 job={job}
                 colorClass={THEME_COLORS[index % THEME_COLORS.length]}
                 isSelected={selectedJobIds.has(job.id)}
@@ -103,12 +109,12 @@ export function DragDropContainer({ jobs, selectedJobIds, onSelectionChange }: D
           </div>
         </SortableContext>
 
-        {createPortal(
+        {mounted && createPortal(
             <DragOverlay>
                 {activeJob && (
                     <div className="w-full">
-                         <JobCard 
-                            job={activeJob} 
+                         <JobCard
+                            job={activeJob}
                             isOverlay
                             colorClass="bg-card"
                             isSelected={false}

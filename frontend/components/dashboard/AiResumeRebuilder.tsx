@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
 import { useRebuildResumeMutation } from '@/lib/redux/slices/agentApiSlice'; // We will add this mutation
 import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
@@ -21,9 +21,12 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
     const [updateJob] = useUpdateJobMutation();
     const { data: session } = useSession();
     
-    const resumesWithLatex = resumes?.filter((r: UserDocument) => {
-        return r.latexSource !== null && r.latexSource !== undefined && r.latexSource.trim() !== '';
-    });
+    const resumesWithLatex = useMemo(() =>
+        resumes?.filter((r: UserDocument) =>
+            r.latexSource !== null && r.latexSource !== undefined && r.latexSource.trim() !== ''
+        ) || [],
+        [resumes]
+    );
 
     useEffect(() => {
         if (resumesWithLatex && resumesWithLatex.length > 0 && !selectedResumeId) {

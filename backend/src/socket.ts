@@ -9,7 +9,7 @@ export function initializeSocket(httpServer: HttpServer): Server {
     }
     const io = new Server(httpServer, {
         cors: {
-            origin: config.clientUrl,
+            origin: config.clientUrl.split(',').map(url => url.trim()).filter(Boolean),
             methods: ['GET', 'POST'],
         },
     });

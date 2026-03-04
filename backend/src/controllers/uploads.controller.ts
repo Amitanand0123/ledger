@@ -74,7 +74,8 @@ export const generateUploadUrl = asyncHandler(
         const { signedUrl, key } = await getUploadPresignedUrl(
             req.user.id,
             filename,
-            contentType
+            contentType,
+            MAX_FILE_SIZE
         );
 
         sendSuccess(res, 200, { signedUrl, key });

@@ -38,9 +38,12 @@ export function FilterPanel({ selectedIds, clearSelection }: FilterPanelProps) {
     const handleClearFilters = () => {
         dispatch(clearFilters());
         // Also clear the input fields visually
-        (document.getElementById('search-input') as HTMLInputElement).value = '';
-        (document.getElementById('min-salary-input') as HTMLInputElement).value = '';
-        (document.getElementById('max-salary-input') as HTMLInputElement).value = '';
+        const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+        const minSalaryInput = document.getElementById('min-salary-input') as HTMLInputElement | null;
+        const maxSalaryInput = document.getElementById('max-salary-input') as HTMLInputElement | null;
+        if (searchInput) searchInput.value = '';
+        if (minSalaryInput) minSalaryInput.value = '';
+        if (maxSalaryInput) maxSalaryInput.value = '';
     };
 
     const handleBulkDelete = () => {

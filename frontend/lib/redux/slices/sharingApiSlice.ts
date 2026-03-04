@@ -15,7 +15,7 @@ export interface Share {
 export const sharingApiSlice = createApi({
   reducerPath: 'sharingApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/`,
     prepareHeaders: async (headers) => {
       const session = await getSession();
       if (session?.accessToken) headers.set('authorization', `Bearer ${session.accessToken}`);

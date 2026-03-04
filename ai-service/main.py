@@ -1,11 +1,14 @@
 import os
 import json
 import re
+import shutil
+import asyncio
 import tempfile
 import subprocess
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
@@ -86,11 +89,12 @@ async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
         if expect_json:
             config["response_mime_type"] = "application/json"
 
-        response = client.models.generate_content(
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(None, lambda: client.models.generate_content(
             model=MODEL,
             contents=prompt,
             config=config,
-        )
+        ))
 
         text = response.text
 
@@ -101,10 +105,13 @@ async def call_gemini(prompt: str, expect_json: bool = False) -> str | dict:
         # Fallback: try to extract JSON from markdown code blocks
         json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
         if json_match:
-            return json.loads(json_match.group(1))
+            try:
+                return json.loads(json_match.group(1))
+            except json.JSONDecodeError:
+                pass
         raise HTTPException(status_code=500, detail="Failed to parse AI response as JSON")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gemini API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="AI service encountered an internal error.")
 
 
 # --- Endpoints ---
@@ -134,6 +141,8 @@ async def analyze_resume(request: AnalyzeResumeRequest, authorized: bool = Secur
 Extract:
 1. "skills": A list of the top 5-7 most relevant skills, technologies, or qualifications found in the resume.
 2. "summary": A concise 2-3 sentence professional summary of the candidate based on the resume.
+
+**NO-HALLUCINATION RULE:** Only extract skills and information that are explicitly stated in the resume text. Do NOT infer, assume, or fabricate any skills, qualifications, or experiences that are not clearly present. If the resume is vague, reflect that vagueness rather than filling gaps with assumptions.
 
 Resume:
 {request.resume_text}
@@ -166,6 +175,12 @@ Job Description:
 {request.job_description_text}
 ---
 
+**NO-HALLUCINATION RULE:**
+- "matching_skills" must ONLY contain skills that are explicitly present in BOTH the resume AND the job description. Do not assume or infer skills.
+- "missing_skills" must ONLY contain skills explicitly required in the job description that are clearly absent from the resume.
+- "suggestions" must be based solely on the actual gap between the resume and job description. Do not invent credentials or experiences the candidate should claim to have.
+- Be honest about the match score. Do not inflate it to be encouraging — accuracy matters more.
+
 Analyze the match and return a JSON object with exactly these keys:
 - "match_score": A number between 0 and 100 indicating how well the resume matches the job
 - "matching_skills": Array of skills from the resume that match the job requirements
@@ -195,6 +210,12 @@ Your task is to rewrite the content of the provided LaTeX resume to be perfectly
 4. Rewrite bullet points to highlight accomplishments and skills that are most relevant to the job description.
 5. Your output **MUST** be only the raw, complete, modified LaTeX code. Do not add any explanations, apologies, or introductory text.
 
+**NO-HALLUCINATION RULE:**
+- You may ONLY use information that exists in the original resume. Do NOT invent new projects, jobs, certifications, metrics, or achievements.
+- You may rephrase and reorder existing content to better match the job description, but you must not fabricate new content.
+- If the resume says "improved performance", do NOT invent a specific percentage like "improved performance by 40%". Only use metrics that are explicitly in the original resume.
+- Keyword incorporation must be honest — add relevant keywords where the candidate genuinely has that skill based on their experience, not where they don't.
+
 **Job Description:**
 ---
 {request.job_description}
@@ -222,7 +243,9 @@ Your task is to rewrite the content of the provided LaTeX resume to be perfectly
 @app.post("/compile-latex-to-pdf")
 async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = Security(verify_api_key)):
     """Compiles LaTeX code into a PDF using pdflatex."""
-    with tempfile.TemporaryDirectory() as tempdir:
+    # Use manual temp directory so it persists until FileResponse finishes streaming
+    tempdir = tempfile.mkdtemp()
+    try:
         tex_path = os.path.join(tempdir, "resume.tex")
         pdf_path = os.path.join(tempdir, "resume.pdf")
 
@@ -230,23 +253,41 @@ async def compile_latex_to_pdf(request: CompileLatexRequest, authorized: bool = 
             f.write(request.latex_source)
 
         # Run pdflatex twice for proper cross-references
+        # -no-shell-escape prevents \write18 command injection
         for _ in range(2):
             process = subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "-output-directory", tempdir, tex_path],
+                ["pdflatex", "-interaction=nonstopmode", "-no-shell-escape", "-output-directory", tempdir, tex_path],
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
 
         if process.returncode != 0:
+            shutil.rmtree(tempdir, ignore_errors=True)
             raise HTTPException(
                 status_code=500,
-                detail=f"LaTeX compilation failed: {process.stdout} {process.stderr}",
+                detail="LaTeX compilation failed. Please check your LaTeX source.",
             )
 
         if not os.path.exists(pdf_path):
+            shutil.rmtree(tempdir, ignore_errors=True)
             raise HTTPException(status_code=500, detail="PDF file was not generated.")
 
-        return FileResponse(pdf_path, media_type="application/pdf", filename="generated_resume.pdf")
+        # Use BackgroundTask to clean up tempdir AFTER the response is streamed
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename="generated_resume.pdf",
+            background=BackgroundTask(shutil.rmtree, tempdir, ignore_errors=True),
+        )
+    except HTTPException:
+        raise
+    except subprocess.TimeoutExpired:
+        shutil.rmtree(tempdir, ignore_errors=True)
+        raise HTTPException(status_code=500, detail="LaTeX compilation timed out.")
+    except Exception:
+        shutil.rmtree(tempdir, ignore_errors=True)
+        raise HTTPException(status_code=500, detail="An error occurred during PDF compilation.")
 
 
 @app.post("/agent/invoke")
@@ -277,6 +318,8 @@ Focus on:
 - Gaps between their profile and the job requirements
 - Specific, actionable steps to improve their candidacy
 - How to tailor their resume for this position
+
+**NO-HALLUCINATION RULE:** Base your analysis ONLY on information present in the resume and job description. Do not assume the candidate has skills, experiences, or qualifications not mentioned in their resume. When suggesting improvements, be clear about what the candidate would need to *learn or acquire* versus what they already have.
 
 Keep the tone encouraging and professional."""
 

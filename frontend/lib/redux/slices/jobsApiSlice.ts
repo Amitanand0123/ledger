@@ -16,7 +16,7 @@ type GetJobsQueryArgs = {
 export const jobsApiSlice = createApi({
   reducerPath: 'jobsApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/`,
     prepareHeaders: async (headers) => {
       const session = await getSession();
       if (session?.accessToken) {
@@ -71,7 +71,7 @@ export const jobsApiSlice = createApi({
     deleteJob: builder.mutation<{ id: string }, string>({
         query: (id) => ({ url: `jobs/${id}`, method: 'DELETE' }),
         transformResponse: (response: { success: boolean; data: { id: string } }) => response.data,
-        invalidatesTags: (result, error, id) => [{ type: 'Job', id: 'LIST' }],
+        invalidatesTags: (result, error, id) => [{ type: 'Job', id }, { type: 'Job', id: 'LIST' }],
     }),
     analyzeJobMatch: builder.mutation<any, { jobId: string, resumeId: string }>({
         query: ({ jobId, resumeId }) => ({

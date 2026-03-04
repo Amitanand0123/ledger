@@ -35,7 +35,7 @@ export const useSocket = (): Socket | null => {
                 newSocket.disconnect();
             };
         }
-    }, [status, session]);
+    }, [status, session?.accessToken]);
 
     return socket;
 };

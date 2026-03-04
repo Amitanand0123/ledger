@@ -14,10 +14,13 @@ import app from '../app.js';
 import { parseSalary } from '../utils/salaryParser.js';
 import { sendEmail } from './email.service.js';
 import { createPlatform } from './platform.service.js';
-import { getTextFromS3 } from './s3.service.js';
+import { getFileBufferFromS3 } from './s3.service.js';
+import { extractTextFromPdf } from '../utils/pdf.utils.js';
 import config from '../config/index.js';
 import { logger } from '@/utils/logger.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '@/utils/ApiError.js';
+
+const AI_FETCH_TIMEOUT_MS = 90_000; // 90 seconds
 
 const onJobDataChange = (userId: string) => {
     const io = app.get('io');
@@ -188,7 +191,9 @@ export const createJob = async (userId: string, data: any) => {
     });
 
     if (newJob && newJob.description) {
-        embedJobDescription(newJob.id, newJob.description, newJob.userId);
+        embedJobDescription(newJob.id, newJob.description, newJob.userId).catch(err =>
+            logger.error('embedJobDescription failed:', err)
+        );
     }
 
     onJobDataChange(userId);
@@ -199,7 +204,7 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
     const jobToUpdate = await getJobById(jobId, userId);
 
     if (data.description && data.summary) {
-        delete data.description;
+        throw new ValidationError('Cannot update both description and summary in the same request. Please send them separately.');
     }
 
     const { platformName, resumeId, coverLetterId, deadline, ...restOfData } = data;
@@ -275,7 +280,9 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
     });
 
     if (data.description && data.description !== jobToUpdate.description) {
-        embedJobDescription(updatedJob.id, updatedJob.description!, updatedJob.userId);
+        embedJobDescription(updatedJob.id, updatedJob.description!, updatedJob.userId).catch(err =>
+            logger.error('embedJobDescription failed:', err)
+        );
     }
 
     onJobDataChange(userId);
@@ -313,8 +320,10 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
 
     if (!resumeDoc) throw new NotFoundError('Resume');
 
-    const resumeText = await getTextFromS3(resumeDoc.fileKey);
-    if (!resumeText) throw new ValidationError('Could not read resume file content');
+    const resumeBuffer = await getFileBufferFromS3(resumeDoc.fileKey);
+    if (!resumeBuffer) throw new ValidationError('Could not read resume file from storage');
+    const resumeText = await extractTextFromPdf(resumeBuffer);
+    if (!resumeText) throw new ValidationError('Could not extract text from resume PDF');
 
     const resumeAnalysisRes = await fetch(`${config.aiServiceUrl}/analyze-resume`, {
         method: 'POST',
@@ -323,10 +332,17 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
             Authorization: `Bearer ${config.aiServiceApiKey}`,
         },
         body: JSON.stringify({ resume_text: resumeText }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!resumeAnalysisRes.ok) {
-        const error = await resumeAnalysisRes.json();
-        throw new Error(`AI service failed to analyze resume: ${error.detail}`);
+        let errorDetail: string;
+        try {
+            const error = await resumeAnalysisRes.json();
+            errorDetail = error.detail || JSON.stringify(error);
+        } catch {
+            errorDetail = await resumeAnalysisRes.text();
+        }
+        throw new Error(`AI service failed to analyze resume: ${errorDetail}`);
     }
     const resumeAnalysis = await resumeAnalysisRes.json();
 
@@ -340,14 +356,84 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
             resume_analysis: resumeAnalysis,
             job_description_text: job.description,
         }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!matchAnalysisRes.ok) {
-        const error = await matchAnalysisRes.json();
-        throw new Error(`AI service failed to match job: ${error.detail}`);
+        let errorDetail: string;
+        try {
+            const error = await matchAnalysisRes.json();
+            errorDetail = error.detail || JSON.stringify(error);
+        } catch {
+            errorDetail = await matchAnalysisRes.text();
+        }
+        throw new Error(`AI service failed to match job: ${errorDetail}`);
     }
     const matchAnalysis = await matchAnalysisRes.json();
 
     return matchAnalysis;
+};
+
+export const scoreResumeStandalone = async (userId: string, resumeId: string, jobDescription: string) => {
+    const [resumeDoc] = await db
+        .select()
+        .from(documents)
+        .where(
+            and(eq(documents.id, resumeId), eq(documents.userId, userId), eq(documents.type, 'RESUME'))
+        )
+        .limit(1);
+
+    if (!resumeDoc) throw new NotFoundError('Resume');
+
+    const resumeBuffer = await getFileBufferFromS3(resumeDoc.fileKey);
+    if (!resumeBuffer) throw new ValidationError('Could not read resume file from storage');
+    const resumeText = await extractTextFromPdf(resumeBuffer);
+    if (!resumeText) throw new ValidationError('Could not extract text from resume PDF');
+
+    const resumeAnalysisRes = await fetch(`${config.aiServiceUrl}/analyze-resume`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
+        },
+        body: JSON.stringify({ resume_text: resumeText }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
+    });
+    if (!resumeAnalysisRes.ok) {
+        let errorDetail: string;
+        try {
+            const error = await resumeAnalysisRes.json();
+            errorDetail = error.detail || JSON.stringify(error);
+        } catch {
+            errorDetail = await resumeAnalysisRes.text();
+        }
+        throw new Error(`AI service failed to analyze resume: ${errorDetail}`);
+    }
+    const resumeAnalysis = await resumeAnalysisRes.json();
+
+    const matchAnalysisRes2 = await fetch(`${config.aiServiceUrl}/match-resume-to-job`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
+        },
+        body: JSON.stringify({
+            resume_analysis: resumeAnalysis,
+            job_description_text: jobDescription,
+        }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
+    });
+    if (!matchAnalysisRes2.ok) {
+        let errorDetail: string;
+        try {
+            const error = await matchAnalysisRes2.json();
+            errorDetail = error.detail || JSON.stringify(error);
+        } catch {
+            errorDetail = await matchAnalysisRes2.text();
+        }
+        throw new Error(`AI service failed to match job: ${errorDetail}`);
+    }
+
+    return matchAnalysisRes2.json();
 };
 
 async function embedJobDescription(jobId: string, description: string, userId: string) {

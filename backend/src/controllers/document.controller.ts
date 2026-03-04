@@ -18,6 +18,10 @@ export const createDocument = asyncHandler(async (req: any, res: Response) => {
     if (!VALID_DOC_TYPES.includes(type)) {
         throw new ValidationError('Invalid document type.');
     }
+    // Validate that the fileKey belongs to the current user to prevent S3 key injection
+    if (!fileKey.startsWith(`uploads/${req.user.id}/`)) {
+        throw new ValidationError('Invalid file key.');
+    }
     const doc = await DocumentService.createDocumentRecord(req.user.id, filename, fileKey, type, latexSource);
     sendSuccess(res, 201, doc);
 });

@@ -1,6 +1,6 @@
 import { db } from '../db/client.js';
 import { users, interviews, jobApplications } from '../db/schema/index.js';
-import { eq, and, gte, lt, notInArray, isNotNull } from 'drizzle-orm';
+import { eq, and, gte, lt, notInArray, isNotNull, inArray, sql } from 'drizzle-orm';
 import { sendEmail } from './email.service.js';
 import { logger } from '@/utils/logger.js';
 import cron from 'node-cron';
@@ -36,12 +36,16 @@ async function checkInterviewReminders() {
             const nextDay = new Date(reminderDate);
             nextDay.setDate(nextDay.getDate() + 1);
 
-            // Find interviews scheduled between reminderDate and nextDay
-            const upcomingInterviews = await db.query.interviews.findMany({
+            // Find interviews for this user's jobs scheduled between reminderDate and nextDay
+            const userJobIds = db.select({ id: jobApplications.id }).from(jobApplications)
+                .where(eq(jobApplications.userId, user.id));
+
+            const validInterviews = await db.query.interviews.findMany({
                 where: and(
                     eq(interviews.completed, false),
                     gte(interviews.scheduledAt, reminderDate),
-                    lt(interviews.scheduledAt, nextDay)
+                    lt(interviews.scheduledAt, nextDay),
+                    inArray(interviews.jobId, userJobIds)
                 ),
                 with: {
                     job: {
@@ -53,11 +57,6 @@ async function checkInterviewReminders() {
                     },
                 },
             });
-
-            // Filter out interviews that don't belong to this user
-            const validInterviews = upcomingInterviews.filter(
-                (interview) => interview.job && interview.job.userId === user.id
-            );
 
             // Send reminder for each upcoming interview
             for (const interview of validInterviews) {

@@ -33,6 +33,7 @@ if (!config.jwtSecret || !config.databaseUrl || !config.gemini.apiKey) {
     console.error(
         'FATAL ERROR: JWT_SECRET, DATABASE_URL, and GEMINI_API_KEY must be defined in the environment variables.'
     );
+    process.exit(1);
 }
 
 export default config;

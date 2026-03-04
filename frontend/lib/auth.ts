@@ -145,17 +145,7 @@ export const authOptions: NextAuthOptions = {
         token.accessTokenExpires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
       }
 
-      // Return previous token if the access token has not expired yet
-      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
-        return token;
-      }
-
-      // Access token has expired, try to refresh it
-      if (token.refreshToken) {
-        return refreshAccessToken(token);
-      }
-
-      // When update() is called, fetch fresh user data from backend
+      // When update() is called, fetch fresh user data from backend (must be before expiry check)
       if (trigger === 'update' && token.accessToken) {
         try {
           const res = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
@@ -173,6 +163,7 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('Error refreshing user data:', error);
         }
+        return token;
       }
 
       // Fetch onboarding status on first login
@@ -191,6 +182,16 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('Error fetching onboarding status:', error);
         }
+      }
+
+      // Return previous token if the access token has not expired yet
+      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // Access token has expired, try to refresh it
+      if (token.refreshToken) {
+        return refreshAccessToken(token);
       }
 
       return token;

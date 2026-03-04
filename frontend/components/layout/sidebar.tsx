@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, Home, Settings } from 'lucide-react';
+import { BarChart3, Calendar, FileSearch, Home, Settings } from 'lucide-react';
 import { NavLink } from './nav-link';
 
 export function Sidebar() {
@@ -11,6 +11,10 @@ export function Sidebar() {
         <NavLink href="/upcoming">
             <Calendar className="h-5 w-5" />
             Upcoming
+        </NavLink>
+        <NavLink href="/resume-tools">
+            <FileSearch className="h-5 w-5" />
+            Resume Tools
         </NavLink>
         <NavLink href="/stats">
             <BarChart3 className="h-5 w-5" />

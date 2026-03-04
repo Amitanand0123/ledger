@@ -38,7 +38,7 @@ const guestJobsSlice = createSlice({
             
             if (jobIndex !== -1) {
                 const originalJob = state.jobs[jobIndex];
-                if (updates.order !== undefined && Object.keys(updates).length === 2) {
+                if (updates.order !== undefined && Object.keys(updates).length === 1) {
                     const reorderedJobs = arrayMove(state.jobs, jobIndex, updates.order);
                     state.jobs = reorderedJobs.map((job, index) => ({ ...job, order: index }));
                 } else {

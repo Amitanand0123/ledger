@@ -5,7 +5,7 @@ export const parseSalary = (
     if (!salary) {
         return {};
     }
-    const sanitized = salary.replace(/[\$,€,£]/g, '').replace(/,/g, '').replace(/k/gi, '000');
+    const sanitized = salary.replace(/[$€£]/g, '').replace(/,/g, '').replace(/(\d)k/gi, '$1000');
 
     const numbers = sanitized.match(/\d+/g);
 

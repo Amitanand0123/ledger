@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/client.js';
 import { users, accounts, refreshTokens } from '../db/schema/index.js';
@@ -12,7 +13,7 @@ import { ValidationError, UnauthorizedError, ConflictError, NotFoundError } from
 import { sendSuccess } from '../utils/response.js';
 
 const generateAccessToken = (id: string) => {
-    return jwt.sign({ id }, config.jwtSecret!, { expiresIn: '30d' });
+    return jwt.sign({ id, type: 'access' }, config.jwtSecret!, { expiresIn: '1h' });
 };
 
 const generateRefreshToken = (id: string) => {
@@ -137,12 +138,14 @@ export const handleOAuth = asyncHandler(async (req: Request, res: Response) => {
 
         // Create user and account in a transaction
         user = await db.transaction(async (tx) => {
+            // OAuth users get an unguessable random password to prevent password-based login
+            const oauthPlaceholderPassword = await bcrypt.hash(crypto.randomUUID(), 10);
             const [newUser] = await tx
                 .insert(users)
                 .values({
                     email,
                     name,
-                    password: '',
+                    password: oauthPlaceholderPassword,
                 })
                 .returning();
 

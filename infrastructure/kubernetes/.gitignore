@@ -1,6 +1,0 @@
-# Never commit actual secrets
-secrets.yaml
-
-# Kubernetes local state
-*.tmp
-*.log

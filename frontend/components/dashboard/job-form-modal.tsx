@@ -15,7 +15,7 @@ import { useAddJobMutation, useUpdateJobMutation } from '@/lib/redux/slices/jobs
 import { useEffect } from 'react';
 import { JobApplication } from '@/lib/types';
 import { useSession } from 'next-auth/react';
-import { addGuestJob } from '@/lib/redux/slices/guestJobsSlice';
+import { addGuestJob, updateGuestJob } from '@/lib/redux/slices/guestJobsSlice';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlatformCombobox } from './platform-combobox';
@@ -71,8 +71,13 @@ export function JobFormModal() {
 
   const onSubmit = async (data: JobFormValues) => {
     if (isGuest) {
-      dispatch(addGuestJob(data as any));
-      toast.success('Demo job added!');
+      if (editingJob) {
+        dispatch(updateGuestJob({ id: editingJob.id, ...data }));
+        toast.success('Demo job updated!');
+      } else {
+        dispatch(addGuestJob(data as any));
+        toast.success('Demo job added!');
+      }
       handleClose();
       return;
     }

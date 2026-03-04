@@ -15,7 +15,12 @@ export const protect = asyncHandler(async (req: any, res: Response, next: NextFu
         try {
             token = req.headers.authorization.split(' ')[1];
             const secret: string = config.jwtSecret!;
-            const decoded = jwt.verify(token!, secret) as unknown as { id: string };
+            const decoded = jwt.verify(token!, secret) as unknown as { id: string; type?: string };
+
+            // Reject refresh tokens used as access tokens
+            if (decoded.type === 'refresh') {
+                throw new UnauthorizedError('Cannot use refresh token for authentication');
+            }
 
             const [user] = await db
                 .select({ id: users.id, name: users.name, email: users.email })
@@ -28,7 +33,7 @@ export const protect = asyncHandler(async (req: any, res: Response, next: NextFu
             }
 
             req.user = user;
-            next();
+            return next();
         } catch (error) {
             if (error instanceof UnauthorizedError) {
                 throw error;
