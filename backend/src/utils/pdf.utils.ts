@@ -10,7 +10,7 @@ function cleanExtractedText(text: string): string {
 
     // 1. Fix mojibake / encoding artifacts (common UTF-8 → Latin-1 misreads)
     const mojibakeMap: Record<string, string> = {
-        'â€™': '\'', 'â€œ': '"', 'â€\u009d': '"', 'â€"': '—', 'â€"': '–',
+        'â€™': '\'', 'â€œ': '"', 'â€\u009d': '"', 'â€"': '—',
         'â€¦': '…', 'Â ': ' ', 'Ã©': 'é', 'Ã¨': 'è', 'Ã±': 'ñ',
         'Ã¼': 'ü', 'Ã¶': 'ö', 'Ã¤': 'ä', 'ï¬': 'fi', 'ï¬‚': 'fl',
     };
@@ -119,8 +119,8 @@ export async function extractHyperlinksFromPdf(buffer: Buffer): Promise<{ url: s
                 links.push({ url, anchorText: anchorText || url });
             }
         }
-    } catch (error) {
-        logger.warn('Failed to extract hyperlinks from PDF (non-fatal):', error);
+    } catch (error: unknown) {
+        logger.warn('Failed to extract hyperlinks from PDF (non-fatal):', error instanceof Error ? { message: error.message } : undefined);
     }
 
     return links;

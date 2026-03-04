@@ -45,7 +45,7 @@ export function ResultsStep({ wizardData, onBack, onReset }: Props) {
                 loading: 'Analyzing your resume against the job description...',
                 success: 'Resume score ready!',
                 error: (err) => err.data?.message || 'Failed to score resume.',
-            }
+            },
         );
     };
 
@@ -59,7 +59,7 @@ export function ResultsStep({ wizardData, onBack, onReset }: Props) {
                 loading: 'Generating your tailored resume... This may take a minute.',
                 success: 'Tailored resume generated!',
                 error: (err) => err.data?.message || 'Failed to generate tailored resume.',
-            }
+            },
         );
     };
 
@@ -72,7 +72,7 @@ export function ResultsStep({ wizardData, onBack, onReset }: Props) {
                 `${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${rebuildData.newDocument.id}/download-url`,
                 {
                     headers: { Authorization: `Bearer ${session.accessToken}` },
-                }
+                },
             );
             if (!res.ok) throw new Error('Could not get download link.');
             const { url } = await res.json();

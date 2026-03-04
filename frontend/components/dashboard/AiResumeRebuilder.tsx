@@ -23,9 +23,9 @@ export function AiResumeRebuilder({ jobId }: AiResumeRebuilderProps) {
     
     const resumesWithLatex = useMemo(() =>
         resumes?.filter((r: UserDocument) =>
-            r.latexSource !== null && r.latexSource !== undefined && r.latexSource.trim() !== ''
+            r.latexSource !== null && r.latexSource !== undefined && r.latexSource.trim() !== '',
         ) || [],
-        [resumes]
+        [resumes],
     );
 
     useEffect(() => {
