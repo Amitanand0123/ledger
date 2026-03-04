@@ -1,5 +1,15 @@
 name: CD
 
+# Deployment is handled automatically by the hosting platforms:
+# - Frontend: Vercel auto-deploys on push to main
+# - Backend: Render auto-deploys on push to main
+# - AI Service: Render auto-deploys on push to main
+#
+# This workflow exists only to block deploys when CI fails.
+# Connect Render/Vercel to only deploy after CI passes by setting:
+# - Vercel: Settings → Git → Checks (require passing checks)
+# - Render: Auto-Deploy is branch-based (CI gate is advisory)
+
 on:
   workflow_run:
     workflows: ['CI']
@@ -9,76 +19,15 @@ on:
       - main
 
 jobs:
-  deploy-frontend:
-    name: Deploy Frontend to Vercel
+  ci-status:
+    name: CI Gate
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-  deploy-backend:
-    name: Deploy Backend to Render
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
-    steps:
-      - name: Trigger Render Deploy
+      - name: Report CI status
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
-            -H "Accept: application/json" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -d '{}')
-          http_code=$(echo "$response" | tail -1)
-          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "Deploy trigger failed with HTTP $http_code"
-            echo "$response"
+          if [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
+            echo "CI passed — platforms will auto-deploy"
+          else
+            echo "CI failed — check: ${{ github.event.workflow_run.html_url }}"
             exit 1
           fi
-          echo "Backend deploy triggered successfully"
-
-  deploy-ai-service:
-    name: Deploy AI Service to Render
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
-    steps:
-      - name: Trigger Render Deploy
-        run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_AI_SERVICE_ID }}/deploys" \
-            -H "Accept: application/json" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -d '{}')
-          http_code=$(echo "$response" | tail -1)
-          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "Deploy trigger failed with HTTP $http_code"
-            echo "$response"
-            exit 1
-          fi
-          echo "AI Service deploy triggered successfully"
-
-  notify-failure:
-    name: CI Failed - Skip Deploy
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - name: CI failed
-        run: |
-          echo "CI workflow failed — skipping deployment"
-          echo "Check the CI run: ${{ github.event.workflow_run.html_url }}"
-          exit 1
