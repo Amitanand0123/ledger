@@ -1,14 +1,18 @@
-name: Continuous Deployment
+name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
     branches:
-      - 'main'
+      - main
 
 jobs:
   deploy-frontend:
     name: Deploy Frontend to Vercel
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout repository
@@ -29,33 +33,52 @@ jobs:
   deploy-backend:
     name: Deploy Backend to Render
     runs-on: ubuntu-latest
-    needs: deploy-frontend # Only run if the frontend deployment starts
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Trigger Render Deploy Hook for Backend
+      - name: Trigger Render Deploy
         run: |
-          curl -X POST \
+          response=$(curl -s -w "\n%{http_code}" -X POST \
             "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
             -H "Accept: application/json" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -d '{}'
+            -d '{}')
+          http_code=$(echo "$response" | tail -1)
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Deploy trigger failed with HTTP $http_code"
+            echo "$response"
+            exit 1
+          fi
+          echo "Backend deploy triggered successfully"
 
   deploy-ai-service:
     name: Deploy AI Service to Render
     runs-on: ubuntu-latest
-    needs: deploy-frontend # Only run if the frontend deployment starts
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Trigger Render Deploy Hook for AI Service
+      - name: Trigger Render Deploy
         run: |
-          curl -X POST \
+          response=$(curl -s -w "\n%{http_code}" -X POST \
             "https://api.render.com/v1/services/${{ secrets.RENDER_AI_SERVICE_ID }}/deploys" \
             -H "Accept: application/json" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -d '{}'
+            -d '{}')
+          http_code=$(echo "$response" | tail -1)
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Deploy trigger failed with HTTP $http_code"
+            echo "$response"
+            exit 1
+          fi
+          echo "AI Service deploy triggered successfully"
+
+  notify-failure:
+    name: CI Failed - Skip Deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: CI failed
+        run: |
+          echo "CI workflow failed — skipping deployment"
+          echo "Check the CI run: ${{ github.event.workflow_run.html_url }}"
+          exit 1
