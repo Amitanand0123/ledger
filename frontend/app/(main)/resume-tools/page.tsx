@@ -21,13 +21,7 @@ export default function ResumeToolsPage() {
     }
 
     return (
-        <div className="container mx-auto max-w-4xl px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">Resume Tools</h1>
-                <p className="mt-2 text-muted-foreground">
-                    Score your resume against a job description or generate a tailored resume.
-                </p>
-            </div>
+        <div className="container mx-auto px-4 py-8">
             <ResumeToolsWizard />
         </div>
     );

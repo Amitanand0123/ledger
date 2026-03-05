@@ -85,7 +85,7 @@ export function ManageDocuments() {
     const coverLetters = documents?.filter(d => d.type === 'COVER_LETTER') || [];
 
     return (
-        <Card className="border-t-4 border-brand-accent-success">
+        <Card>
             <CardHeader>
                 <CardTitle>My Documents</CardTitle>
                 <CardDescription>
@@ -143,6 +143,8 @@ export function ManageDocuments() {
                                 {resumes.length === 0 && !showResumeUploader && <p className="text-sm text-muted-foreground text-center py-4">No resumes uploaded yet.</p>}
                             </div>
                         </div>
+
+                        <hr className="border-border" />
 
                         {/* Cover Letters Section */}
                          <div className="space-y-2">

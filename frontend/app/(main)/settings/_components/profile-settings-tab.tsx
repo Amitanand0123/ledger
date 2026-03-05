@@ -20,7 +20,7 @@ export function ProfileSettingsTab({ isPasswordAuth }: ProfileSettingsTabProps) 
               <User className="h-6 w-6 text-brand-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Profile Information</CardTitle>
+              <CardTitle className="text-base">Profile Information</CardTitle>
               <CardDescription>Update your personal details</CardDescription>
             </div>
           </div>
@@ -39,7 +39,7 @@ export function ProfileSettingsTab({ isPasswordAuth }: ProfileSettingsTabProps) 
                 <Lock className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <CardTitle className="text-xl">Security</CardTitle>
+                <CardTitle className="text-base">Security</CardTitle>
                 <CardDescription>Change your password</CardDescription>
               </div>
             </div>

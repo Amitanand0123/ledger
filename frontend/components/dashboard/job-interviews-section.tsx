@@ -171,7 +171,7 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
 
       {showAddForm && (
         <form onSubmit={handleSubmit} className="space-y-3 p-4 border rounded-lg bg-muted/30">
-          <div>
+          <div className="space-y-2">
             <Label>Type</Label>
             <Select value={formData.type} onValueChange={(value: InterviewType) => setFormData({ ...formData, type: value })}>
               <SelectTrigger>
@@ -187,7 +187,7 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
             </Select>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Date & Time</Label>
             <Input
               type="datetime-local"
@@ -197,7 +197,7 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Duration (minutes)</Label>
             <Input
               type="number"
@@ -207,7 +207,7 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Location / Link</Label>
             <Input
               placeholder="e.g., Zoom link or office address"
@@ -216,7 +216,7 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Notes</Label>
             <Textarea
               placeholder="Interviewer names, topics to prepare, etc."

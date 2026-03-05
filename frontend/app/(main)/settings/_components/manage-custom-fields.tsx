@@ -26,7 +26,7 @@ export function ManageCustomFields() {
     return (
         <>
             <CustomFieldFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-            <Card className="border-t-4 border-brand-accent-light">
+            <Card>
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>

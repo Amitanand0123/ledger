@@ -13,6 +13,7 @@ import { Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 
 import { DragDropContainer } from './drag-drop-container';
 import { Checkbox } from '../ui/checkbox';
 import { DescriptionModal } from './description-modal';
+import { InterviewScheduleModal } from './interview-schedule-modal';
 import { useSocket } from '@/lib/hooks/useSocket';
 import { toast } from 'sonner';
 import { OnboardingModal } from '../onboarding/onboarding-modal';
@@ -53,7 +54,7 @@ export function DashboardPageContent() {
 
   const filters = useAppSelector((state) => state.filters);
   const guestJobs = useAppSelector((state) => state.guestJobs.jobs);
-  const { isJobFormModalOpen, isDescriptionModalOpen } = useAppSelector((state) => state.ui);
+  const { isJobFormModalOpen, isDescriptionModalOpen, isInterviewModalOpen } = useAppSelector((state) => state.ui);
 
   const { data: apiResponse, error, isLoading, isFetching } = useGetJobsQuery(filters, {
     skip: isGuest || status === 'loading',
@@ -211,6 +212,7 @@ export function DashboardPageContent() {
 
         {isJobFormModalOpen && <JobFormModal />}
         {isDescriptionModalOpen && <DescriptionModal />}
+        {isInterviewModalOpen && <InterviewScheduleModal />}
         {showOnboarding && <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />}
       </div>
     </>

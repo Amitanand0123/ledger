@@ -32,6 +32,7 @@ export function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     };
 
     const uploadToS3 = async (file: File, presignedUrl: string) => {
+        console.log('[Onboarding Upload] Uploading to S3, URL prefix:', presignedUrl?.substring(0, 80));
         const response = await fetch(presignedUrl, {
             method: 'PUT',
             body: file,
@@ -40,8 +41,11 @@ export function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             },
         });
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Onboarding Upload] S3 failed:', response.status, errorText);
             throw new Error('Failed to upload file to S3');
         }
+        console.log('[Onboarding Upload] S3 upload success');
     };
 
     const handleUpload = async () => {
@@ -83,7 +87,8 @@ export function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                         throw new Error('Failed to get upload URL');
                     }
 
-                    const { signedUrl, key } = await presignedResponse.json();
+                    const presignedData = await presignedResponse.json();
+                    const { signedUrl, key } = presignedData.data || presignedData;
 
                     // Upload to S3
                     await uploadToS3(file, signedUrl);
@@ -157,6 +162,7 @@ export function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                                     variant="outline"
                                     size="sm"
                                     type="button"
+                                    className="min-w-[160px]"
                                     onClick={() => document.getElementById('resume-upload')?.click()}
                                     disabled={isUploading}
                                 >
@@ -211,6 +217,7 @@ export function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                                     variant="outline"
                                     size="sm"
                                     type="button"
+                                    className="min-w-[160px]"
                                     onClick={() => document.getElementById('coverletter-upload')?.click()}
                                     disabled={isUploading}
                                 >

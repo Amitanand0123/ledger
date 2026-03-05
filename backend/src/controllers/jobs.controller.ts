@@ -75,7 +75,3 @@ export const analyzeJobMatch = asyncHandler(async (req: any, res: Response) => {
     sendSuccess(res, 200, analysis);
 });
 
-export const findSimilarJobs = asyncHandler(async (req: any, res: Response) => {
-    const similarJobs = await JobService.findSimilar(req.params.id, req.user.id);
-    sendSuccess(res, 200, similarJobs);
-});

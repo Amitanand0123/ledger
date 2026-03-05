@@ -84,7 +84,7 @@ export function UpcomingInterviewsWidget() {
   if (!session) return null;
 
   return (
-    <Card className="overflow-hidden border-l-4 border-l-blue-600 dark:border-l-blue-500">
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />

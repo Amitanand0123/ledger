@@ -20,13 +20,8 @@ const config = {
     aiServiceUrl: process.env.AI_SERVICE_URL,
     aiServiceApiKey: process.env.AI_SERVICE_API_KEY,
 
-    email: {
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT || '587',
-        secure: process.env.EMAIL_SECURE === 'true',
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+    resendApiKey: process.env.RESEND_API_KEY,
+    emailFrom: process.env.EMAIL_FROM || 'Ledger <onboarding@resend.dev>',
 };
 
 if (!config.jwtSecret || !config.databaseUrl || !config.gemini.apiKey) {

@@ -7,7 +7,6 @@ import {
     deleteJobApplication,
     deleteBulkJobs,
     analyzeJobMatch,
-    findSimilarJobs,
 } from '../../controllers/jobs.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
 import { validate } from '../../middleware/validate.middleware.js';
@@ -32,6 +31,5 @@ router.route('/:id')
     .delete(validate(deleteJobSchema), deleteJobApplication);
 
 router.post('/:id/match-analysis', analyzeJobMatch);
-router.route('/:id/similar').get(findSimilarJobs);
 
 export default router;

@@ -5,16 +5,20 @@ interface UIState {
   isJobFormModalOpen: boolean;
   isCustomFieldModalOpen: boolean;
   isDescriptionModalOpen: boolean;
+  isInterviewModalOpen: boolean;
   editingJob: JobApplication | null;
   jobForDescriptionModal: JobApplication | null;
+  jobForInterviewModal: JobApplication | null;
 }
 
 const initialState: UIState = {
   isJobFormModalOpen: false,
   isCustomFieldModalOpen: false,
   isDescriptionModalOpen: false,
+  isInterviewModalOpen: false,
   editingJob: null,
   jobForDescriptionModal: null,
+  jobForInterviewModal: null,
 };
 
 const uiSlice = createSlice({
@@ -47,6 +51,15 @@ const uiSlice = createSlice({
       state.isDescriptionModalOpen = false;
       state.jobForDescriptionModal = null;
     },
+
+    openInterviewModal: (state, action: PayloadAction<JobApplication>) => {
+      state.isInterviewModalOpen = true;
+      state.jobForInterviewModal = action.payload;
+    },
+    closeInterviewModal: (state) => {
+      state.isInterviewModalOpen = false;
+      state.jobForInterviewModal = null;
+    },
   },
 });
 
@@ -58,6 +71,8 @@ export const {
     closeCustomFieldModal,
     openDescriptionModal,
     closeDescriptionModal,
+    openInterviewModal,
+    closeInterviewModal,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

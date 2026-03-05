@@ -86,11 +86,7 @@ export const jobsApiSlice = createApi({
       transformResponse: (response: { success: boolean; data: JobApplication }) => response.data,
       providesTags: (result, error, id) => [{ type: 'Job', id }],
     }),
-    findSimilarJobs: builder.query<JobApplication[], string>({
-        query: (jobId) => `jobs/${jobId}/similar`,
-        transformResponse: (response: { success: boolean; data: JobApplication[] }) => response.data,
-    }),
   }),
 });
 
-export const { useGetJobsQuery, useGetJobByIdQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation, useFindSimilarJobsQuery } = jobsApiSlice;
+export const { useGetJobsQuery, useGetJobByIdQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation } = jobsApiSlice;

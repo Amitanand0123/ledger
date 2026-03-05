@@ -14,10 +14,10 @@ export default function SettingsPage() {
     const isPasswordAuth = !!session?.user?.email;
 
     return (
-        <div className="space-y-8 pb-8">
+        <div className="space-y-4 pb-8">
             {/* Header Section */}
             <div className="flex flex-col gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     Account Settings
                 </h1>
                 <p className="text-sm text-muted-foreground">Manage your profile, documents, and preferences</p>
@@ -25,7 +25,7 @@ export default function SettingsPage() {
 
             {/* Tabs with Modern Styling */}
             <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 h-auto p-1 bg-muted/50 backdrop-blur">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto p-1 bg-muted/50 backdrop-blur">
                     <TabsTrigger
                         value="profile"
                         className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md py-3"
@@ -56,20 +56,20 @@ export default function SettingsPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="profile" className="mt-6">
+                <TabsContent value="profile" className="mt-2">
                     <ProfileSettingsTab isPasswordAuth={isPasswordAuth} />
                 </TabsContent>
 
-                <TabsContent value="documents" className="mt-6">
+                <TabsContent value="documents" className="mt-2">
                     <ManageDocuments />
                 </TabsContent>
 
-                <TabsContent value="sharing" className="mt-6 space-y-6">
+                <TabsContent value="sharing" className="mt-2 space-y-6">
                     <DashboardSharingTab />
                     <ManageSharing />
                 </TabsContent>
 
-                <TabsContent value="customization" className="mt-6">
+                <TabsContent value="customization" className="mt-2">
                     <ManageCustomFields />
                 </TabsContent>
             </Tabs>

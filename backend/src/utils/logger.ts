@@ -98,11 +98,18 @@ export const logger = {
 
         let errorData = '';
         if (error instanceof Error) {
-            errorData = formatLogData({
+            const extras: Record<string, any> = {
                 message: error.message,
                 stack: error.stack,
                 name: error.name,
-            });
+            };
+            // Capture postgres/drizzle error properties hidden by default
+            for (const key of ['code', 'detail', 'severity', 'hint', 'constraint', 'table', 'schema', 'cause']) {
+                if ((error as any)[key] !== undefined) {
+                    extras[key] = String((error as any)[key]);
+                }
+            }
+            errorData = formatLogData(extras);
         } else if (error) {
             errorData = formatLogData(error);
         }

@@ -60,6 +60,7 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
 
             const presignedData = await presignedUrlRes.json();
             const { signedUrl, key } = presignedData.data || presignedData;
+            console.log('[Upload] Got presigned URL, key:', key);
 
             // Upload to S3 with the correct Content-Type header
             const s3UploadRes = await fetch(signedUrl, {
@@ -70,8 +71,11 @@ export function DocumentUploader({ type, onUploadComplete }: DocumentUploaderPro
                 },
             });
             if (!s3UploadRes.ok) {
+                const errorText = await s3UploadRes.text();
+                console.error('[Upload] S3 upload failed:', s3UploadRes.status, errorText);
                 throw new Error('File upload to storage failed.');
             }
+            console.log('[Upload] S3 upload success');
             // Create document record
             const docCreateBody: {
                 filename: string;

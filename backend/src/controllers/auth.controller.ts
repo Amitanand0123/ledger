@@ -20,6 +20,29 @@ const generateRefreshToken = (id: string) => {
     return jwt.sign({ id, type: 'refresh' }, config.jwtSecret!, { expiresIn: '30d' });
 };
 
+const saveRefreshToken = async (token: string, userId: string) => {
+    try {
+        await db.insert(refreshTokens).values({
+            token,
+            userId,
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+    } catch (err: unknown) {
+        // Log the FULL postgres error details for debugging
+        const pgErr = err as any;
+        logger.error('RefreshToken insert failed', {
+            message: pgErr?.message,
+            code: pgErr?.code,
+            detail: pgErr?.detail,
+            severity: pgErr?.severity,
+            constraint: pgErr?.constraint,
+            table: pgErr?.table,
+            cause: pgErr?.cause ? String(pgErr.cause) : undefined,
+        });
+        throw err;
+    }
+};
+
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
 
@@ -63,11 +86,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
 
     if (user) {
         const refreshToken = generateRefreshToken(user.id);
-        await db.insert(refreshTokens).values({
-            token: refreshToken,
-            userId: user.id,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        });
+        await saveRefreshToken(refreshToken, user.id);
 
         logger.info(`New user registered: ${user.email}`);
         sendSuccess(res, 201, {
@@ -88,11 +107,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
         const refreshToken = generateRefreshToken(user.id);
-        await db.insert(refreshTokens).values({
-            token: refreshToken,
-            userId: user.id,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        });
+        await saveRefreshToken(refreshToken, user.id);
 
         sendSuccess(res, 200, {
             id: user.id,
@@ -163,11 +178,7 @@ export const handleOAuth = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const refreshToken = generateRefreshToken(user.id);
-    await db.insert(refreshTokens).values({
-        token: refreshToken,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    });
+    await saveRefreshToken(refreshToken, user.id);
 
     sendSuccess(res, 200, {
         id: user.id,
@@ -215,11 +226,7 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
     await db.delete(refreshTokens).where(eq(refreshTokens.id, storedToken.id));
 
     const newRefreshToken = generateRefreshToken(decoded.id);
-    await db.insert(refreshTokens).values({
-        token: newRefreshToken,
-        userId: decoded.id,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    });
+    await saveRefreshToken(newRefreshToken, decoded.id);
 
     sendSuccess(res, 200, {
         token: generateAccessToken(decoded.id),

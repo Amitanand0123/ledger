@@ -2,26 +2,86 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useSession } from 'next-auth/react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, PieLabelRenderProps } from 'recharts';
+import {
+    Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip,
+    XAxis, YAxis, PieChart, Pie, Cell, Area, AreaChart,
+} from 'recharts';
 import { Loader2, TrendingUp, CalendarDays, Percent, Clock, Briefcase, Target, Award, Activity } from 'lucide-react';
 import { StatCard } from '@/components/stats/StatCard';
 import { useGetStatsQuery } from '@/lib/redux/slices/statsApiSlice';
 import { useGetAdvancedStatsQuery } from '@/lib/redux/slices/userApiSlice';
 
-const COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#94A3B8', '#EF4444'];
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
 
-const pieLabel = (props: PieLabelRenderProps) => {
-    const { name, percent } = props;
-    if (typeof percent !== 'number'){
-        return '';
-    }
-    const percentage = (percent * 100).toFixed(0);
-    return `${name}: ${percentage}%`;
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+        }}>
+            <p style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 4 }}>{label}</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--foreground)' }}>
+                {payload[0].value} applications
+            </p>
+        </div>
+    );
+};
+
+const CustomPieTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const { name, value, payload: data } = payload[0];
+    return (
+        <div style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+        }}>
+            <div style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: data?.fill || COLORS[0],
+                flexShrink: 0,
+            }} />
+            <div>
+                <p style={{ fontSize: 12, color: 'var(--muted-foreground)', margin: 0 }}>{name}</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--foreground)', margin: 0 }}>{value}</p>
+            </div>
+        </div>
+    );
+};
+
+const renderCustomLegend = (props: any) => {
+    const { payload } = props;
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px 16px', paddingTop: 12 }}>
+            {payload?.map((entry: any, index: number) => (
+                <div key={`legend-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: entry.color,
+                    }} />
+                    <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{entry.value}</span>
+                </div>
+            ))}
+        </div>
+    );
 };
 
 export default function StatsPage() {
     const { data: session } = useSession();
-    
+
     const { data: basicStats, isLoading: isLoadingBasic, error: errorBasic } = useGetStatsQuery(undefined, { skip: !session });
     const { data: advancedStats, isLoading: isLoadingAdvanced, error: errorAdvanced } = useGetAdvancedStatsQuery(undefined, { skip: !session });
 
@@ -61,11 +121,13 @@ export default function StatsPage() {
         );
     }
 
+    const totalApplications = basicStats.funnelData?.reduce((sum: number, d: any) => sum + d.value, 0) || 0;
+
     return (
         <div className="space-y-8 pb-8">
             {/* Header Section */}
             <div className="flex flex-col gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     Your Job Search Analytics
                 </h1>
                 <p className="text-sm text-muted-foreground">Track your application performance and insights at a glance</p>
@@ -105,59 +167,51 @@ export default function StatsPage() {
 
             {/* Charts Section */}
             <div className="grid gap-6 lg:grid-cols-7">
-                {/* Bar Chart - Applications Over Time */}
+                {/* Area/Bar Chart - Applications Over Time */}
                 <Card className="col-span-full lg:col-span-4 overflow-hidden border-0 shadow-lg pt-0">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl -z-10" />
                     <CardHeader className="border-b bg-gradient-to-r from-brand-primary/5 to-transparent pt-6">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
                                 <TrendingUp className="h-5 w-5 text-brand-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg">Applications Over Time</CardTitle>
-                                <CardDescription>Monthly application activity and trends</CardDescription>
+                                <CardTitle className="text-base">Applications Over Time</CardTitle>
+                                <CardDescription className="text-xs">Monthly application activity</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="pt-6">
-                        <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={basicStats.timeSeriesData}>
-                                <defs>
-                                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.9}/>
-                                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+                    <CardContent className="pt-6 pr-2">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={basicStats.timeSeriesData} barCategoryGap="20%">
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="var(--border)"
+                                    opacity={0.15}
+                                    vertical={false}
+                                />
                                 <XAxis
                                     dataKey="name"
                                     stroke="var(--muted-foreground)"
-                                    fontSize={12}
+                                    fontSize={11}
                                     tickLine={false}
                                     axisLine={false}
+                                    dy={8}
                                 />
                                 <YAxis
                                     stroke="var(--muted-foreground)"
-                                    fontSize={12}
+                                    fontSize={11}
                                     tickLine={false}
                                     axisLine={false}
                                     allowDecimals={false}
+                                    width={30}
                                 />
-                                <Tooltip
-                                    contentStyle={{
-                                        background: 'var(--card)',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                    }}
-                                    cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
-                                />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.08, radius: 6 }} />
                                 <Bar
                                     dataKey="count"
-                                    fill="url(#barGradient)"
-                                    radius={[8, 8, 0, 0]}
+                                    fill="#3B82F6"
+                                    radius={[6, 6, 0, 0]}
                                     name="Applications"
-                                    maxBarSize={60}
+                                    maxBarSize={48}
                                 />
                             </BarChart>
                         </ResponsiveContainer>
@@ -166,64 +220,55 @@ export default function StatsPage() {
 
                 {/* Pie Chart - Application Funnel */}
                 <Card className="col-span-full lg:col-span-3 overflow-hidden border-0 shadow-lg pt-0">
-                    <div className="absolute top-0 left-0 w-64 h-64 bg-brand-secondary/5 rounded-full blur-3xl -z-10" />
                     <CardHeader className="border-b bg-gradient-to-r from-brand-secondary/5 to-transparent pt-6">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-brand-secondary/10 flex items-center justify-center">
                                 <Award className="h-5 w-5 text-brand-secondary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg">Application Funnel</CardTitle>
-                                <CardDescription>Status distribution breakdown</CardDescription>
+                                <CardTitle className="text-base">Application Funnel</CardTitle>
+                                <CardDescription className="text-xs">Status distribution breakdown</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        <ResponsiveContainer width="100%" height={350}>
+                        <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
-                                <defs>
-                                    {COLORS.map((color, index) => (
-                                        <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor={color} stopOpacity={1}/>
-                                            <stop offset="100%" stopColor={color} stopOpacity={0.6}/>
-                                        </linearGradient>
-                                    ))}
-                                </defs>
                                 <Pie
                                     data={basicStats.funnelData}
                                     dataKey="value"
                                     nameKey="name"
                                     cx="50%"
-                                    cy="50%"
-                                    outerRadius={100}
-                                    innerRadius={60}
-                                    labelLine={false}
-                                    label={pieLabel}
-                                    paddingAngle={2}
+                                    cy="45%"
+                                    outerRadius={95}
+                                    innerRadius={55}
+                                    paddingAngle={3}
+                                    stroke="var(--card)"
+                                    strokeWidth={2}
+                                    cornerRadius={4}
                                 >
                                     {basicStats.funnelData.map((_entry: any, index: number) => (
-                                        <Cell key={`cell-${index}`} fill={`url(#pieGradient-${index % COLORS.length})`} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
                                     ))}
                                 </Pie>
-                                <Tooltip
-                                    contentStyle={{
-                                        background: 'var(--card)',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                    }}
-                                />
-                                <Legend
-                                    verticalAlign="bottom"
-                                    height={36}
-                                    iconType="circle"
-                                />
+                                {/* Center label */}
+                                <text x="50%" y="42%" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 24, fontWeight: 700, fill: 'var(--foreground)' }}>
+                                    {totalApplications}
+                                </text>
+                                <text x="50%" y="52%" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 11, fill: 'var(--muted-foreground)' }}>
+                                    Total
+                                </text>
+                                <Tooltip content={<CustomPieTooltip />} />
+                                <Legend content={renderCustomLegend} verticalAlign="bottom" />
                             </PieChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
             </div>
-            
+
             {/* Top Platforms Section */}
             {advancedStats?.topPlatforms?.length > 0 && (
                 <Card className="overflow-hidden border-0 shadow-lg pt-0">
@@ -233,33 +278,44 @@ export default function StatsPage() {
                                 <Activity className="h-5 w-5 text-orange-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg">Top Application Sources</CardTitle>
-                                <CardDescription>Your most frequently used platforms</CardDescription>
+                                <CardTitle className="text-base">Top Application Sources</CardTitle>
+                                <CardDescription className="text-xs">Your most frequently used platforms</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        <div className="space-y-4">
-                            {advancedStats.topPlatforms.map((platform: any, index: number) => (
-                                <div
-                                    key={platform.name}
-                                    className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-muted/50 to-transparent hover:from-muted transition-all group"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary font-bold text-sm">
-                                            #{index + 1}
+                        <div className="space-y-3">
+                            {advancedStats.topPlatforms.map((platform: any, index: number) => {
+                                const maxCount = advancedStats.topPlatforms[0]?.count || 1;
+                                const percentage = (platform.count / maxCount) * 100;
+                                return (
+                                    <div
+                                        key={platform.name}
+                                        className="relative flex items-center justify-between p-3 rounded-lg overflow-hidden hover:bg-muted/30 transition-all group"
+                                    >
+                                        {/* Progress bar background */}
+                                        <div
+                                            className="absolute inset-y-0 left-0 rounded-lg opacity-10 group-hover:opacity-15 transition-opacity"
+                                            style={{
+                                                width: `${percentage}%`,
+                                                background: COLORS[index % COLORS.length],
+                                            }}
+                                        />
+                                        <div className="relative flex items-center gap-3">
+                                            <div
+                                                className="flex items-center justify-center w-8 h-8 rounded-full font-bold text-xs text-white"
+                                                style={{ background: COLORS[index % COLORS.length] }}
+                                            >
+                                                #{index + 1}
+                                            </div>
+                                            <p className="font-medium text-sm">{platform.name}</p>
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-base">{platform.name}</p>
-                                            <p className="text-xs text-muted-foreground">Application platform</p>
+                                        <div className="relative">
+                                            <p className="text-sm font-bold" style={{ color: COLORS[index % COLORS.length] }}>{platform.count}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xl font-bold text-brand-primary">{platform.count}</p>
-                                        <p className="text-xs text-muted-foreground">applications</p>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </CardContent>
                 </Card>

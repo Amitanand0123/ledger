@@ -3,6 +3,14 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } fro
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'crypto';
 
+logger.info('S3 config', {
+    region: process.env.AWS_REGION || 'auto',
+    bucket: process.env.AWS_S3_BUCKET_NAME,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID?.slice(0, 8) + '...',
+    hasSecret: !!process.env.AWS_SECRET_ACCESS_KEY,
+    endpoint: process.env.S3_ENDPOINT || '(default AWS)',
+});
+
 const s3Client = new S3Client({
     region: process.env.AWS_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT,
@@ -32,15 +40,17 @@ export const getUploadPresignedUrl = async (
             'user-id': userId,
         },
     };
-    if (maxFileSize) {
-        commandInput.ContentLength = maxFileSize;
-    }
     const command = new PutObjectCommand(commandInput);
-    const signedUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 900,
-    });
-
-    return { signedUrl, key };
+    try {
+        const signedUrl = await getSignedUrl(s3Client, command, {
+            expiresIn: 900,
+        });
+        logger.info('Presigned URL generated', { bucket: BUCKET_NAME, key, urlPrefix: signedUrl.substring(0, 80) + '...' });
+        return { signedUrl, key };
+    } catch (error) {
+        logger.error('Failed to generate presigned upload URL', error as Error);
+        throw error;
+    }
 };
 
 export const getTextFromS3 = async (key: string): Promise<string> => {

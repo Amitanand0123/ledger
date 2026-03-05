@@ -28,7 +28,7 @@ export function StatCard({ title, value, description, icon, gradient = 'from-blu
         <CardContent>
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-3xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <div className="text-2xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
                 {value}
               </div>
               {description && (

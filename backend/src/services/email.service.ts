@@ -1,32 +1,21 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import config from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
-let transporter: nodemailer.Transporter;
+let resend: Resend | null = null;
 
 export const initializeEmailService = async () => {
-    if (!config.email.user || !config.email.pass || !config.email.host) {
-        logger.warn('Email service environment variables not fully configured. Email sending will be disabled.');
+    if (!config.resendApiKey) {
+        logger.warn('RESEND_API_KEY not configured. Email sending will be disabled.');
         return;
     }
 
     try {
-        transporter = nodemailer.createTransport({
-            host: config.email.host,
-            port: Number(config.email.port),
-            secure: config.email.secure,
-            auth: {
-                user: config.email.user,
-                pass: config.email.pass,
-            },
-        });
-
-        await transporter.verify();
-        logger.info('Email service is configured and ready to send real emails.');
-
+        resend = new Resend(config.resendApiKey);
+        logger.info('Email service (Resend) is configured and ready.');
     } catch (error) {
-        logger.error('Failed to initialize or verify email service:', error);
-        transporter = null!; 
+        logger.error('Failed to initialize Resend email service:', error);
+        resend = null;
     }
 };
 
@@ -38,17 +27,26 @@ interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions) => {
-    if (!transporter) {
+    if (!resend) {
         logger.warn(`Skipping email to "${options.to}" because the email service is not initialized.`);
         return;
     }
-    
+
     try {
-        const info = await transporter.sendMail({
-            from: `"Ledger" <${config.email.user}>`,
-            ...options,
+        const { data, error } = await resend.emails.send({
+            from: config.emailFrom,
+            to: options.to,
+            subject: options.subject,
+            text: options.text,
+            html: options.html,
         });
-        logger.info(`Email sent successfully to "${options.to}". Message ID: ${info.messageId}`);
+
+        if (error) {
+            logger.error(`Resend error sending email to "${options.to}":`, error);
+            return;
+        }
+
+        logger.info(`Email sent successfully to "${options.to}". ID: ${data?.id}`);
     } catch (error) {
         logger.error(`Error sending email to "${options.to}":`, error);
     }

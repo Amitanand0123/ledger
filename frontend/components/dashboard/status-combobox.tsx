@@ -79,10 +79,10 @@ export function StatusCombobox({ currentStatus, onStatusChange, isFilter = false
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-[160px] justify-between p-0 border-none bg-transparent hover:bg-transparent">
-                    <Badge className={`w-full justify-between px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
+                <Button variant="outline" role="combobox" aria-expanded={open} className="min-w-[140px] w-fit justify-between p-0 border-none bg-transparent hover:bg-transparent">
+                    <Badge className={`min-w-[140px] w-fit relative justify-center px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
                         {isFilter && currentStatus === 'ALL' ? 'All Statuses' : triggerText}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="absolute right-1.5 h-3 w-3 shrink-0 opacity-50" />
                     </Badge>
                 </Button>
             </PopoverTrigger>

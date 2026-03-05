@@ -6,7 +6,7 @@ import { JobApplication } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Edit, Trash2, GripVertical, MoreHorizontal, Link as LinkIcon, Briefcase, FileText, MapPin, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '@/lib/redux/hooks';
-import { setEditingJob, openJobFormModal, openDescriptionModal } from '@/lib/redux/slices/uiSlice';
+import { setEditingJob, openJobFormModal, openDescriptionModal, openInterviewModal } from '@/lib/redux/slices/uiSlice';
 import { useDeleteJobMutation, useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
 import { StatusCombobox } from './status-combobox'; 
@@ -129,6 +129,8 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
         if (isGuest) {
             dispatch(updateGuestJob({ id: job.id, status: newStatus }));
             toast.info('Status updated for demo job.');
+        } else if (newStatus === 'INTERVIEW') {
+            dispatch(openInterviewModal(job));
         } else {
             toast.promise(updateJobApi({ id: job.id, status: newStatus }).unwrap(), {
                 loading: 'Updating status...', success: 'Status updated', error: 'Failed to update.',

@@ -35,7 +35,7 @@ async function refreshAccessToken(token: any) {
       ...token,
       accessToken: refreshedTokens.token,
       refreshToken: refreshedTokens.refreshToken,
-      accessTokenExpires: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+      accessTokenExpires: Date.now() + 55 * 60 * 1000, // 55 minutes
     };
   } catch (error) {
     console.error('Error refreshing access token:', error);
@@ -142,7 +142,7 @@ export const authOptions: NextAuthOptions = {
         token.id = customUser._id || customUser.id;
         token.name = customUser.name;
         token.email = customUser.email;
-        token.accessTokenExpires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+        token.accessTokenExpires = Date.now() + 55 * 60 * 1000; // 55 minutes (JWT expires in 1h, refresh 5 min early)
       }
 
       // When update() is called, fetch fresh user data from backend (must be before expiry check)

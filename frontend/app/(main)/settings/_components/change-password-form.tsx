@@ -22,7 +22,7 @@ export function ChangePasswordForm() {
 
     const onSubmit = async (data: PasswordFormValues) => {
         try {
-            const response = await fetch('/api/v1/users/password', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/password`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

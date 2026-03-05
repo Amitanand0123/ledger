@@ -5,12 +5,10 @@ import {
     documents,
     interviews,
     notes,
-    users,
 } from '../db/schema/index.js';
 import { eq, and, or, gte, lte, ilike, asc, desc, inArray, SQL, sql } from 'drizzle-orm';
 import app from '../app.js';
 import { parseSalary } from '../utils/salaryParser.js';
-import { sendEmail } from './email.service.js';
 import { createPlatform } from './platform.service.js';
 import { getFileBufferFromS3 } from './s3.service.js';
 import { extractTextFromPdf } from '../utils/pdf.utils.js';
@@ -243,22 +241,6 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
             jobId,
             status: data.status,
         });
-
-        const [user] = await db
-            .select({ email: users.email })
-            .from(users)
-            .where(eq(users.id, userId))
-            .limit(1);
-
-        if (user && (data.status === 'INTERVIEW' || data.status === 'ACCEPTED')) {
-            const subject =
-                data.status === 'ACCEPTED' ? 'Congratulations on your new role!' : 'You have an interview!';
-            const textBody = `Your application for ${jobToUpdate.position} at ${jobToUpdate.company} is now: ${data.status}.`;
-            // Fire-and-forget email with error handling
-            sendEmail({ to: user.email, subject, text: textBody, html: `<p>${textBody}</p>` }).catch((error) =>
-                logger.error(`Failed to send status update email to ${user.email}:`, error)
-            );
-        }
     }
 
     const [updatedJob] = await db
@@ -475,30 +457,3 @@ async function embedJobDescription(jobId: string, description: string, userId: s
     }
 }
 
-export const findSimilar = async (jobId: string, userId: string) => {
-    const job = await getJobById(jobId, userId);
-    if (!job.description) {
-        throw new ValidationError('Source job has no description');
-    }
-
-    const response = await fetch(`${config.aiServiceUrl}/find-similar-jobs`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.aiServiceApiKey}`,
-        },
-        body: JSON.stringify({ job_id: jobId, job_description: job.description }),
-    });
-    if (!response.ok) throw new Error('Failed to fetch similar jobs from AI service.');
-
-    const similarJobIds = (await response.json()).map((j: any) => j.id);
-
-    if (similarJobIds.length === 0) return [];
-
-    return db.query.jobApplications.findMany({
-        where: and(inArray(jobApplications.id, similarJobIds), eq(jobApplications.userId, userId)),
-        with: {
-            platform: true,
-        },
-    });
-};

@@ -1,7 +1,7 @@
 'use client';
 
 import { JobApplication } from '@/lib/types';
-import { SimilarJobs } from '@/components/dashboard/SimilarJobs';
+
 import { Link2 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -83,7 +83,6 @@ export function JobDetailsTab({ job }: JobDetailsTabProps) {
                 </div>
             )}
 
-            <SimilarJobs jobId={job.id} />
         </div>
     );
 }
