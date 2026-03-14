@@ -139,7 +139,7 @@ export const getJobById = async (jobId: string, userId: string) => {
 };
 
 export const createJob = async (userId: string, data: any) => {
-    const { salary, platformName, deadline, ...restOfData } = data;
+    const { salary, platformName, deadline, offerDeadline, offerStartDate, ...restOfData } = data;
     const { min, max } = parseSalary(salary);
 
     let platformId = null;
@@ -156,6 +156,8 @@ export const createJob = async (userId: string, data: any) => {
                 ...restOfData,
                 salary,
                 deadline: deadline ? new Date(deadline) : null,
+                offerDeadline: offerDeadline ? new Date(offerDeadline) : null,
+                offerStartDate: offerStartDate ? new Date(offerStartDate) : null,
                 salaryMin: min,
                 salaryMax: max,
                 userId,
