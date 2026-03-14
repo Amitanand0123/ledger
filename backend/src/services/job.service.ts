@@ -335,12 +335,13 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
         signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!resumeAnalysisRes.ok) {
+        const errorText = await resumeAnalysisRes.text();
         let errorDetail: string;
         try {
-            const error = await resumeAnalysisRes.json();
-            errorDetail = error.detail || JSON.stringify(error);
+            const parsed = JSON.parse(errorText);
+            errorDetail = parsed.detail || errorText;
         } catch {
-            errorDetail = await resumeAnalysisRes.text();
+            errorDetail = errorText;
         }
         throw new Error(`AI service failed to analyze resume: ${errorDetail}`);
     }
@@ -359,12 +360,13 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
         signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!matchAnalysisRes.ok) {
+        const errorText = await matchAnalysisRes.text();
         let errorDetail: string;
         try {
-            const error = await matchAnalysisRes.json();
-            errorDetail = error.detail || JSON.stringify(error);
+            const parsed = JSON.parse(errorText);
+            errorDetail = parsed.detail || errorText;
         } catch {
-            errorDetail = await matchAnalysisRes.text();
+            errorDetail = errorText;
         }
         throw new Error(`AI service failed to match job: ${errorDetail}`);
     }
@@ -399,12 +401,13 @@ export const scoreResumeStandalone = async (userId: string, resumeId: string, jo
         signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!resumeAnalysisRes.ok) {
+        const errorText = await resumeAnalysisRes.text();
         let errorDetail: string;
         try {
-            const error = await resumeAnalysisRes.json();
-            errorDetail = error.detail || JSON.stringify(error);
+            const parsed = JSON.parse(errorText);
+            errorDetail = parsed.detail || errorText;
         } catch {
-            errorDetail = await resumeAnalysisRes.text();
+            errorDetail = errorText;
         }
         throw new Error(`AI service failed to analyze resume: ${errorDetail}`);
     }
@@ -423,12 +426,13 @@ export const scoreResumeStandalone = async (userId: string, resumeId: string, jo
         signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
     });
     if (!matchAnalysisRes2.ok) {
+        const errorText = await matchAnalysisRes2.text();
         let errorDetail: string;
         try {
-            const error = await matchAnalysisRes2.json();
-            errorDetail = error.detail || JSON.stringify(error);
+            const parsed = JSON.parse(errorText);
+            errorDetail = parsed.detail || errorText;
         } catch {
-            errorDetail = await matchAnalysisRes2.text();
+            errorDetail = errorText;
         }
         throw new Error(`AI service failed to match job: ${errorDetail}`);
     }
