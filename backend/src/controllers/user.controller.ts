@@ -41,3 +41,9 @@ export const completeOnboarding = asyncHandler(async (req: any, res: Response) =
     sendSuccess(res, 200, updatedUser);
 });
 
+export const getOverviewStats = asyncHandler(async (req: any, res: Response) => {
+    const days = parseInt(req.query.days as string) || 30;
+    const stats = await UserService.getOverviewStats(req.user.id, days);
+    sendSuccess(res, 200, stats);
+});
+

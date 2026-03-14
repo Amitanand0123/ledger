@@ -16,11 +16,11 @@ export default function SettingsPage() {
     return (
         <div className="space-y-4 pb-8">
             {/* Header Section */}
-            <div className="flex flex-col gap-2">
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     Account Settings
                 </h1>
-                <p className="text-sm text-muted-foreground">Manage your profile, documents, and preferences</p>
+                <p className="text-xs text-muted-foreground">Manage your profile, documents, and preferences</p>
             </div>
 
             {/* Tabs with Modern Styling */}
@@ -28,30 +28,30 @@ export default function SettingsPage() {
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto p-1 bg-muted/50 backdrop-blur">
                     <TabsTrigger
                         value="profile"
-                        className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md py-3"
+                        className="flex items-center gap-2 text-xs data-[state=active]:bg-background data-[state=active]:shadow-md py-2"
                     >
-                        <User className="h-4 w-4" />
+                        <User className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Profile</span>
                     </TabsTrigger>
                     <TabsTrigger
                         value="documents"
-                        className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md py-3"
+                        className="flex items-center gap-2 text-xs data-[state=active]:bg-background data-[state=active]:shadow-md py-2"
                     >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Documents</span>
                     </TabsTrigger>
                     <TabsTrigger
                         value="sharing"
-                        className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md py-3"
+                        className="flex items-center gap-2 text-xs data-[state=active]:bg-background data-[state=active]:shadow-md py-2"
                     >
-                        <Share2 className="h-4 w-4" />
+                        <Share2 className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Sharing</span>
                     </TabsTrigger>
                     <TabsTrigger
                         value="customization"
-                        className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md py-3"
+                        className="flex items-center gap-2 text-xs data-[state=active]:bg-background data-[state=active]:shadow-md py-2"
                     >
-                        <Sliders className="h-4 w-4" />
+                        <Sliders className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Custom Fields</span>
                     </TabsTrigger>
                 </TabsList>

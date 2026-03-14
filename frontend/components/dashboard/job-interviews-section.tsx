@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar, Clock, MapPin, Trash2, Plus, CheckCircle2, Circle, Pencil } from 'lucide-react';
 import { Interview, InterviewType } from '@/lib/types';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface JobInterviewsSectionProps {
   jobId: string;
@@ -265,12 +265,12 @@ export function JobInterviewsSection({ jobId, interviews = [], onUpdate }: JobIn
                   <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3" />
-                      <span>{format(new Date(interview.scheduledAt), 'PPP')}</span>
+                      <span>{formatDate(interview.scheduledAt)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-3 w-3" />
                       <span>
-                        {format(new Date(interview.scheduledAt), 'p')}
+                        {formatTime(interview.scheduledAt)}
                         {interview.duration && ` (${interview.duration} min)`}
                       </span>
                     </div>

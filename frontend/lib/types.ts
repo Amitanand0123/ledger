@@ -92,6 +92,9 @@ export interface JobApplication {
   createdAt: string;
   updatedAt: string;
   aiAnalysisCount?: number;
+  aiScore?: number | null;
+  aiFitAssessment?: string | null;
+  aiTailoredSummary?: string | null;
 
   platformId?: string | null;
   platform?: JobPlatform | null;
@@ -102,6 +105,10 @@ export interface JobApplication {
   coverLetter?: UserDocument | null;
 
   interviewDate?: string | null;
+  offerAmount?: string | null;
+  offerDeadline?: string | null;
+  offerStartDate?: string | null;
+  offerNotes?: string | null;
   interviews?: Interview[];
   notes?: Note[];
   statusHistory?: any[];

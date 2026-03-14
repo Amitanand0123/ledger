@@ -4,6 +4,7 @@ import {
     changeUserPassword,
     getUserStats,
     getAdvancedUserStats,
+    getOverviewStats,
     completeOnboarding,
 } from '../../controllers/user.controller.js';
 import { protect } from '../../middleware/auth.middleware.js';
@@ -20,6 +21,7 @@ router.use(protect);
 
 router.get('/stats', getUserStats);
 router.get('/stats/advanced', getAdvancedUserStats);
+router.get('/stats/overview', getOverviewStats);
 
 router.put('/profile', validate(updateProfileSchema), updateUserProfile);
 

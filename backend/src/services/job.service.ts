@@ -190,6 +190,16 @@ export const createJob = async (userId: string, data: any) => {
         embedJobDescription(newJob.id, newJob.description, newJob.userId).catch(err =>
             logger.error('embedJobDescription failed:', err)
         );
+
+        // Auto-score with AI if description exists
+        scoreJob(newJob.id, userId).then(result => {
+            if (result) {
+                logger.info(`Auto-scored job ${newJob.id}: ${result.aiScore}/100`);
+                onJobDataChange(userId); // Notify frontend of score update
+            }
+        }).catch(err =>
+            logger.error('Auto-score failed:', err)
+        );
     }
 
     onJobDataChange(userId);
@@ -203,11 +213,19 @@ export const updateJob = async (jobId: string, userId: string, data: any) => {
         throw new ValidationError('Cannot update both description and summary in the same request. Please send them separately.');
     }
 
-    const { platformName, resumeId, coverLetterId, deadline, ...restOfData } = data;
+    const { platformName, resumeId, coverLetterId, deadline, offerDeadline, offerStartDate, ...restOfData } = data;
     const updateData: any = { ...restOfData };
 
     if (deadline !== undefined) {
         updateData.deadline = deadline ? new Date(deadline) : null;
+    }
+
+    if (offerDeadline !== undefined) {
+        updateData.offerDeadline = offerDeadline ? new Date(offerDeadline) : null;
+    }
+
+    if (offerStartDate !== undefined) {
+        updateData.offerStartDate = offerStartDate ? new Date(offerStartDate) : null;
     }
 
     if (platformName) {
@@ -414,6 +432,117 @@ export const scoreResumeStandalone = async (userId: string, resumeId: string, jo
     }
 
     return matchAnalysisRes2.json();
+};
+
+export const getStatusCounts = async (userId: string) => {
+    const result = await db
+        .select({
+            status: jobApplications.status,
+            count: sql<number>`count(*)`,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId))
+        .groupBy(jobApplications.status);
+
+    const counts: Record<string, number> = {};
+    let total = 0;
+    result.forEach(row => {
+        counts[row.status] = Number(row.count);
+        total += Number(row.count);
+    });
+    counts['ALL'] = total;
+
+    return counts;
+};
+
+export const bulkUpdateStatus = async (userId: string, ids: string[], status: string) => {
+    const jobs = await db
+        .select({ id: jobApplications.id })
+        .from(jobApplications)
+        .where(and(inArray(jobApplications.id, ids), eq(jobApplications.userId, userId)));
+
+    const ownedIds = jobs.map(j => j.id);
+    if (ownedIds.length === 0) return { count: 0 };
+
+    await db
+        .update(jobApplications)
+        .set({ status: status as any })
+        .where(inArray(jobApplications.id, ownedIds));
+
+    await db.insert(statusHistory).values(
+        ownedIds.map(id => ({ jobId: id, status: status as any }))
+    );
+
+    onJobDataChange(userId);
+    return { count: ownedIds.length };
+};
+
+export const scoreJob = async (jobId: string, userId: string) => {
+    const job = await db.query.jobApplications.findFirst({
+        where: and(eq(jobApplications.id, jobId), eq(jobApplications.userId, userId)),
+        with: { resume: true },
+    });
+
+    if (!job || !job.description) return null;
+
+    let resumeDoc = job.resume;
+    if (!resumeDoc) {
+        const [firstResume] = await db
+            .select()
+            .from(documents)
+            .where(and(eq(documents.userId, userId), eq(documents.type, 'RESUME')))
+            .limit(1);
+        resumeDoc = firstResume || null;
+    }
+
+    if (!resumeDoc) return null;
+
+    const { getFileBufferFromS3 } = await import('./s3.service.js');
+    const { extractTextFromPdf } = await import('../utils/pdf.utils.js');
+
+    const resumeBuffer = await getFileBufferFromS3(resumeDoc.fileKey);
+    if (!resumeBuffer) return null;
+    const resumeText = await extractTextFromPdf(resumeBuffer);
+    if (!resumeText) return null;
+
+    const resumeAnalysisRes = await fetch(`${config.aiServiceUrl}/analyze-resume`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
+        },
+        body: JSON.stringify({ resume_text: resumeText }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
+    });
+    if (!resumeAnalysisRes.ok) return null;
+    const resumeAnalysis = await resumeAnalysisRes.json();
+
+    const matchRes = await fetch(`${config.aiServiceUrl}/match-resume-to-job`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.aiServiceApiKey}`,
+        },
+        body: JSON.stringify({
+            resume_analysis: resumeAnalysis,
+            job_description_text: job.description,
+        }),
+        signal: AbortSignal.timeout(AI_FETCH_TIMEOUT_MS),
+    });
+    if (!matchRes.ok) return null;
+    const matchResult = await matchRes.json();
+
+    const aiScore = Math.round(matchResult.match_score || 0);
+    const rawSuggestions = matchResult.suggestions || '';
+    const aiFitAssessment = Array.isArray(rawSuggestions) ? rawSuggestions.join('\n') : String(rawSuggestions);
+    const aiTailoredSummary = matchResult.tailored_summary || `Match score: ${aiScore}/100. ${(matchResult.matching_skills || []).join(', ')}`;
+
+    await db
+        .update(jobApplications)
+        .set({ aiScore, aiFitAssessment, aiTailoredSummary })
+        .where(eq(jobApplications.id, jobId));
+
+    return { aiScore, aiFitAssessment, aiTailoredSummary };
 };
 
 async function embedJobDescription(jobId: string, description: string, userId: string) {

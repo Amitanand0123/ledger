@@ -7,7 +7,7 @@ import { Textarea } from '../ui/textarea';
 import { Trash2, Plus, Pin, PinOff, Pencil } from 'lucide-react';
 import { Note } from '@/lib/types';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { formatDateTime } from '@/lib/utils';
 
 interface JobNotesSectionProps {
   jobId: string;
@@ -173,7 +173,7 @@ export function JobNotesSection({ jobId, notes = [], onUpdate }: JobNotesSection
                   )}
                   <p className="text-sm whitespace-pre-wrap break-words">{note.content}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {format(new Date(note.createdAt), 'PPp')}
+                    {formatDateTime(note.createdAt)}
                   </p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">

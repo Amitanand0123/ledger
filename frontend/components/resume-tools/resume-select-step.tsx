@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, FileText, Loader2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { formatDate } from '@/lib/utils';
 import type { WizardData } from './resume-tools-wizard';
 import type { UserDocument } from '@/lib/types';
 
@@ -105,7 +106,7 @@ export function ResumeSelectStep({ wizardData, setWizardData, onNext, onBack }: 
                                     <div>
                                         <p className="font-medium">{selectedResume.filename}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            Uploaded {new Date(selectedResume.createdAt).toLocaleDateString()}
+                                            Uploaded {formatDate(selectedResume.createdAt)}
                                         </p>
                                         {wizardData.selectedResumeHasLatex ? (
                                             <Badge className="mt-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Calendar, Clock, MapPin, Loader2, ExternalLink } from 'lucide-react';
-import { format, formatDistanceToNow, isPast, isFuture } from 'date-fns';
+import { formatDistanceToNow, isPast, isFuture } from 'date-fns';
+import { formatDate, formatTime } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
 
@@ -136,12 +137,12 @@ export function UpcomingInterviewsWidget() {
                       <div className="flex flex-col gap-1 mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span>{format(interviewDate, 'EEE, MMM d')}</span>
+                          <span>{formatDate(interviewDate)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>
-                            {format(interviewDate, 'h:mm a')}
+                            {formatTime(interviewDate)}
                             {interview.duration && ` (${interview.duration} min)`}
                           </span>
                         </div>

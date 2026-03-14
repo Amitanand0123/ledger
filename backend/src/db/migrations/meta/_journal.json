@@ -15,6 +15,20 @@
       "when": 1770308519494,
       "tag": "0001_violet_mongu",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773401845670,
+      "tag": "0002_worthless_outlaw_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773468022130,
+      "tag": "0003_slimy_jocasta",
+      "breakpoints": true
     }
   ]
 }

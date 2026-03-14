@@ -49,9 +49,27 @@ const statusColorMap: Record<string, string> = {
     ALL: 'bg-muted text-muted-foreground',
 };
 
+const statusDotColor: Record<string, string> = {
+    INTERESTED: 'bg-blue-500',
+    PREPARING: 'bg-indigo-500',
+    READY_TO_APPLY: 'bg-purple-500',
+    APPLIED: 'bg-gray-500',
+    OA: 'bg-amber-500',
+    INTERVIEW: 'bg-amber-500',
+    OFFER: 'bg-purple-500',
+    ACCEPTED: 'bg-green-500',
+    REJECTED: 'bg-red-500',
+    WITHDRAWN: 'bg-gray-400',
+};
+
 const getStatusColor = (status: string) => {
     const upperStatus = status.toUpperCase().replace(/\s/g, '_');
     return statusColorMap[upperStatus] || 'bg-blue-500 text-white';
+};
+
+const getStatusDotColor = (status: string) => {
+    const upperStatus = status.toUpperCase().replace(/\s/g, '_');
+    return statusDotColor[upperStatus] || 'bg-blue-500';
 };
 
 interface StatusComboboxProps {
@@ -73,14 +91,14 @@ export function StatusCombobox({ currentStatus, onStatusChange, isFilter = false
         setSearchValue('');
     };
     
-    const badgeColorClass = getStatusColor(currentStatus);
-    const triggerText = currentStatus.replace(/_/g, ' ');
+    const badgeColorClass = currentStatus ? getStatusColor(currentStatus) : 'bg-muted text-muted-foreground';
+    const triggerText = currentStatus ? currentStatus.replace(/_/g, ' ') : 'Change Status';
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="min-w-[140px] w-fit justify-between p-0 border-none bg-transparent hover:bg-transparent">
-                    <Badge className={`min-w-[140px] w-fit relative justify-center px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
+                <Button variant="outline" role="combobox" aria-expanded={open} className={`min-w-[140px] w-fit justify-between h-auto p-0 border-none bg-transparent hover:bg-transparent ${badgeColorClass}`}>
+                    <Badge className={`min-w-[140px] w-fit relative justify-center px-3 py-1.5 text-xs font-semibold ${badgeColorClass}`}>
                         {isFilter && currentStatus === 'ALL' ? 'All Statuses' : triggerText}
                         <ChevronsUpDown className="absolute right-1.5 h-3 w-3 shrink-0 opacity-50" />
                     </Badge>
@@ -97,11 +115,11 @@ export function StatusCombobox({ currentStatus, onStatusChange, isFilter = false
                         </CommandEmpty>
                         <CommandGroup>
                             {options.map(status => (
-                                <CommandItem key={status} value={status} onSelect={() => handleSelect(status)} className="cursor-pointer flex-col items-start py-3">
+                                <CommandItem key={status} value={status} onSelect={() => handleSelect(status)} className="cursor-pointer flex-col items-start py-2">
                                     <div className="flex items-center w-full">
-                                        <Check className={`mr-2 h-4 w-4 ${currentStatus === status ? 'opacity-100' : 'opacity-0'}`} />
-                                        <span className={`h-2 w-2 rounded-full mr-2 ${getStatusColor(status)}`}></span>
-                                        <span className="font-medium">{status === 'ALL' ? 'All Statuses' : status.replace(/_/g, ' ')}</span>
+                                        <Check className={`mr-2 h-3.5 w-3.5 ${currentStatus === status ? 'opacity-100' : 'opacity-0'}`} />
+                                        <span className={`h-2.5 w-2.5 rounded-full mr-2 shrink-0 ${getStatusDotColor(status)}`}></span>
+                                        <span className="text-xs font-medium">{status === 'ALL' ? 'All Statuses' : status.replace(/_/g, ' ')}</span>
                                     </div>
                                     {status !== 'ALL' && statusDescriptions[status] && (
                                         <span className="text-xs text-muted-foreground ml-6 mt-0.5">

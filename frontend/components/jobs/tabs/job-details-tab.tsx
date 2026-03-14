@@ -1,7 +1,7 @@
 'use client';
 
 import { JobApplication } from '@/lib/types';
-
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { Link2 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -15,7 +15,7 @@ function StatusHistoryTimeline({ history }: { history: any[] }) {
                 <div key={item.id} className="relative mb-6 pl-3">
                     <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-primary border-2 border-card"></div>
                     <p className="font-semibold text-foreground">{item.status.replace(/_/g, ' ')}</p>
-                    <p className="text-sm text-muted-foreground">{new Date(item.changedAt).toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">{formatDateTime(item.changedAt)}</p>
                 </div>
             ))}
         </div>
@@ -53,18 +53,18 @@ export function JobDetailsTab({ job }: JobDetailsTabProps) {
                     </div>
                     <div className="p-3 border rounded-lg bg-muted/30">
                         <span className="text-muted-foreground">Applied Date</span>
-                        <p className="font-medium mt-1">{new Date(job.applicationDate).toLocaleDateString()}</p>
+                        <p className="font-medium mt-1">{formatDate(job.applicationDate)}</p>
                     </div>
                     {job.interviewDate && (
                         <div className="p-3 border rounded-lg bg-muted/30">
                             <span className="text-muted-foreground">Interview Date</span>
-                            <p className="font-medium mt-1">{new Date(job.interviewDate).toLocaleDateString()}</p>
+                            <p className="font-medium mt-1">{formatDate(job.interviewDate)}</p>
                         </div>
                     )}
                     {job.deadline && (
                         <div className="p-3 border rounded-lg bg-muted/30">
                             <span className="text-muted-foreground">Deadline</span>
-                            <p className="font-medium mt-1">{new Date(job.deadline).toLocaleDateString()}</p>
+                            <p className="font-medium mt-1">{formatDate(job.deadline)}</p>
                         </div>
                     )}
                     {job.salary && (

@@ -65,6 +65,31 @@ export const deleteBulkJobs = asyncHandler(
     }
 );
 
+export const getStatusCounts = asyncHandler(async (req: any, res: Response) => {
+    const counts = await JobService.getStatusCounts(req.user.id);
+    sendSuccess(res, 200, counts);
+});
+
+export const bulkUpdateStatus = asyncHandler(async (req: any, res: Response) => {
+    const { ids, status } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+        throw new ValidationError('An array of job IDs is required.');
+    }
+    if (!status) {
+        throw new ValidationError('Status is required.');
+    }
+    const result = await JobService.bulkUpdateStatus(req.user.id, ids, status);
+    sendSuccess(res, 200, result, { message: `${result.count} jobs updated.` });
+});
+
+export const rescoreJob = asyncHandler(async (req: any, res: Response) => {
+    const result = await JobService.scoreJob(req.params.id, req.user.id);
+    if (!result) {
+        throw new ValidationError('Could not score this job. Ensure it has a description and you have a resume uploaded.');
+    }
+    sendSuccess(res, 200, result);
+});
+
 export const analyzeJobMatch = asyncHandler(async (req: any, res: Response) => {
     const { id: jobId } = req.params;
     const { resumeId } = req.body;

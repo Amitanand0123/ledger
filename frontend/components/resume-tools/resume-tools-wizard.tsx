@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { JobInputStep } from './job-input-step';
 import { ResumeSelectStep } from './resume-select-step';
 import { ResultsStep } from './results-step';
-import { Check, FileText, Upload, Trophy } from 'lucide-react';
+import { Check, FileText, Upload, Trophy, Info } from 'lucide-react';
 
 export interface WizardData {
     position: string;
@@ -15,21 +15,26 @@ export interface WizardData {
     selectedResumeHasLatex: boolean;
 }
 
+interface ResumeToolsWizardProps {
+    initialData?: Partial<WizardData>;
+    sourceJobId?: string | null;
+}
+
 const STEPS = [
     { label: 'Job Details', description: 'Provide the job description', icon: FileText },
     { label: 'Resume', description: 'Select your resume', icon: Upload },
     { label: 'Results', description: 'View score & suggestions', icon: Trophy },
 ];
 
-export function ResumeToolsWizard() {
+export function ResumeToolsWizard({ initialData, sourceJobId }: ResumeToolsWizardProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [wizardData, setWizardData] = useState<WizardData>({
-        position: '',
-        company: '',
-        location: '',
-        jobDescription: '',
-        selectedResumeId: '',
-        selectedResumeHasLatex: false,
+        position: initialData?.position || '',
+        company: initialData?.company || '',
+        location: initialData?.location || '',
+        jobDescription: initialData?.jobDescription || '',
+        selectedResumeId: initialData?.selectedResumeId || '',
+        selectedResumeHasLatex: initialData?.selectedResumeHasLatex || false,
     });
 
     const goNext = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -141,6 +146,14 @@ export function ResumeToolsWizard() {
 
             {/* Right Panel — Step Content */}
             <div className="flex-1 min-w-0">
+                {sourceJobId && currentStep === 0 && (
+                    <div className="mb-4 flex items-center gap-2 rounded-lg border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm">
+                        <Info className="h-4 w-4 text-brand-primary shrink-0" />
+                        <span className="text-muted-foreground">
+                            Pre-filled from your <strong className="text-foreground">{wizardData.company}</strong> &mdash; <strong className="text-foreground">{wizardData.position}</strong> application.
+                        </span>
+                    </div>
+                )}
                 {currentStep === 0 && (
                     <JobInputStep
                         wizardData={wizardData}
@@ -161,6 +174,7 @@ export function ResumeToolsWizard() {
                         wizardData={wizardData}
                         onBack={goBack}
                         onReset={resetWizard}
+                        sourceJobId={sourceJobId}
                     />
                 )}
             </div>

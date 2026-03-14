@@ -86,7 +86,38 @@ export const jobsApiSlice = createApi({
       transformResponse: (response: { success: boolean; data: JobApplication }) => response.data,
       providesTags: (result, error, id) => [{ type: 'Job', id }],
     }),
+    getStatusCounts: builder.query<Record<string, number>, void>({
+      query: () => 'jobs/status-counts',
+      transformResponse: (response: { success: boolean; data: Record<string, number> }) => response.data,
+      providesTags: [{ type: 'Job', id: 'LIST' }],
+    }),
+    bulkUpdateStatus: builder.mutation<any, { ids: string[]; status: string }>({
+      query: (body) => ({ url: 'jobs/bulk-status', method: 'PATCH', body }),
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
+      invalidatesTags: [{ type: 'Job', id: 'LIST' }],
+    }),
+    bulkDeleteJobs: builder.mutation<any, { ids: string[] }>({
+      query: (body) => ({ url: 'jobs', method: 'DELETE', body }),
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
+      invalidatesTags: [{ type: 'Job', id: 'LIST' }],
+    }),
+    rescoreJob: builder.mutation<any, string>({
+      query: (id) => ({ url: `jobs/${id}/rescore`, method: 'POST' }),
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
+      invalidatesTags: (result, error, id) => [{ type: 'Job', id }],
+    }),
   }),
 });
 
-export const { useGetJobsQuery, useGetJobByIdQuery, useAddJobMutation, useUpdateJobMutation, useDeleteJobMutation, useAnalyzeJobMatchMutation } = jobsApiSlice;
+export const {
+  useGetJobsQuery,
+  useGetJobByIdQuery,
+  useAddJobMutation,
+  useUpdateJobMutation,
+  useDeleteJobMutation,
+  useAnalyzeJobMatchMutation,
+  useGetStatusCountsQuery,
+  useBulkUpdateStatusMutation,
+  useBulkDeleteJobsMutation,
+  useRescoreJobMutation,
+} = jobsApiSlice;

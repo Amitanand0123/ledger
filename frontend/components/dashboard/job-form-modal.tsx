@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
-import { closeJobFormModal } from '@/lib/redux/slices/uiSlice';
+import { closeJobFormModal, openInterviewModal, openOfferModal } from '@/lib/redux/slices/uiSlice';
 import { jobFormSchema } from '@/lib/validations';
 import { useAddJobMutation, useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { useEffect } from 'react';
@@ -90,6 +90,13 @@ export function JobFormModal() {
       loading: editingJob ? 'Updating application...' : 'Saving application...',
       success: (result) => {
         handleClose();
+        // Chain: open interview/offer modal if status changed to INTERVIEW/OFFER
+        const statusChanged = !editingJob || editingJob.status !== data.status;
+        if (statusChanged && data.status === 'INTERVIEW') {
+          dispatch(openInterviewModal(result));
+        } else if (statusChanged && data.status === 'OFFER') {
+          dispatch(openOfferModal(result));
+        }
         return `Application for ${result.company} has been ${editingJob ? 'updated' : 'saved'}!`;
       },
       error: (err) => err.data?.message || 'An error occurred. Please try again.',

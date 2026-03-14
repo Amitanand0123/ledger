@@ -27,11 +27,18 @@ export const jobApplications = pgTable('JobApplication', {
   status: jobStatusEnum('status').default('INTERESTED').notNull(),
   order: integer('order').default(0).notNull(),
   aiAnalysisCount: integer('aiAnalysisCount').default(0).notNull(),
+  aiScore: integer('aiScore'),
+  aiFitAssessment: text('aiFitAssessment'),
+  aiTailoredSummary: text('aiTailoredSummary'),
   userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   platformId: text('platformId').references(() => jobPlatforms.id, { onDelete: 'set null' }),
   resumeId: text('resumeId'), // Will be set with foreign key later (circular dependency)
   coverLetterId: text('coverLetterId'), // Will be set with foreign key later (circular dependency)
   interviewDate: timestamp('interviewDate', { mode: 'date' }),
+  offerAmount: text('offerAmount'),
+  offerDeadline: timestamp('offerDeadline', { mode: 'date' }),
+  offerStartDate: timestamp('offerStartDate', { mode: 'date' }),
+  offerNotes: text('offerNotes'),
   createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { mode: 'date' }).defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({

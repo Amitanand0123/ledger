@@ -6,7 +6,7 @@ import { JobApplication } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Edit, Trash2, GripVertical, MoreHorizontal, Link as LinkIcon, Briefcase, FileText, MapPin, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '@/lib/redux/hooks';
-import { setEditingJob, openJobFormModal, openDescriptionModal, openInterviewModal } from '@/lib/redux/slices/uiSlice';
+import { setEditingJob, openJobFormModal, openDescriptionModal, openInterviewModal, openOfferModal } from '@/lib/redux/slices/uiSlice';
 import { useDeleteJobMutation, useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
 import { StatusCombobox } from './status-combobox'; 
@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
 import { UserDocument } from '@/lib/types';
 import { useState } from 'react';
+import { formatDate } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { differenceInDays } from 'date-fns';
 
@@ -131,6 +132,8 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
             toast.info('Status updated for demo job.');
         } else if (newStatus === 'INTERVIEW') {
             dispatch(openInterviewModal(job));
+        } else if (newStatus === 'OFFER') {
+            dispatch(openOfferModal(job));
         } else {
             toast.promise(updateJobApi({ id: job.id, status: newStatus }).unwrap(), {
                 loading: 'Updating status...', success: 'Status updated', error: 'Failed to update.',
@@ -179,7 +182,7 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
                 {renderCell(<TruncatedText text={job.position} maxLength={25} />, 'hidden md:flex text-left', handleViewDetails)}
                 {renderCell(<StatusCombobox currentStatus={job.status} onStatusChange={handleStatusChange} />, '', (e) => e.stopPropagation())}
                 {renderCell(<div className='flex items-center gap-1'><MapPin size={14}/><TruncatedText text={job.location} maxLength={15}/></div>, 'hidden md:flex', handleViewDetails)}
-                {renderCell(<span>{new Date(job.applicationDate).toLocaleDateString()}</span>, 'hidden md:flex', handleViewDetails)}
+                {renderCell(<span>{formatDate(job.applicationDate)}</span>, 'hidden md:flex', handleViewDetails)}
                 {renderCell(<TruncatedText text={job.platform?.name} maxLength={15}/>, 'hidden md:flex', handleViewDetails)}
                 {renderCell(job.url ? <a href={job.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-1 hover:text-primary"><LinkIcon size={14}/> Link</a> : <span className="text-muted-foreground">N/A</span>, 'hidden md:flex')}
                 {renderCell(<TruncatedText text={job.description} maxLength={30}/>, 'hidden md:flex hover:text-primary', handleOpenDescriptionModal)}

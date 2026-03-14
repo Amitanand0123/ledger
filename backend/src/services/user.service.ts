@@ -1,6 +1,6 @@
 import { db } from '../db/client.js';
 import { users, jobApplications, statusHistory, jobPlatforms } from '../db/schema/index.js';
-import { eq, and, gte, isNotNull, inArray, sql, count, desc } from 'drizzle-orm';
+import { eq, and, gte, lte, isNotNull, inArray, sql, count, desc } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 
 export const updateUserProfile = async (userId: string, name: string) => {
@@ -224,5 +224,144 @@ export const getAdvancedApplicationStats = async (userId: string) => {
         applicationToInterviewRate: parseFloat(applicationToInterviewRate.toFixed(1)),
         averageTimeToInterview: averageTimeToInterview ? parseFloat(averageTimeToInterview.toFixed(1)) : null,
         topPlatforms: topPlatformsWithName,
+    };
+};
+
+export const getOverviewStats = async (userId: string, days: number) => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+    const startDateISO = startDate.toISOString();
+
+    // 1. Applications per day
+    const applicationsPerDay = await db.execute<{ date: string; count: string }>(sql`
+        SELECT TO_CHAR("applicationDate", 'YYYY-MM-DD') as date, COUNT(*) as count
+        FROM "JobApplication"
+        WHERE "userId" = ${userId} AND "applicationDate" >= ${startDateISO}
+        GROUP BY date
+        ORDER BY date ASC
+    `);
+
+    const dailyData = (applicationsPerDay || []).map(row => ({
+        date: row.date,
+        count: Number(row.count),
+    }));
+
+    const totalInRange = dailyData.reduce((sum, d) => sum + d.count, 0);
+    const avgPerDay = days > 0 ? parseFloat((totalInRange / days).toFixed(1)) : 0;
+
+    // 2. Funnel data - count by key statuses
+    const funnelResult = await db
+        .select({ status: jobApplications.status, count: count() })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId))
+        .groupBy(jobApplications.status)
+        .orderBy(desc(count()));
+
+    const funnelData = funnelResult.map(row => ({
+        status: row.status,
+        count: Number(row.count),
+    }));
+
+    // 3. Conversion rate
+    const totalApplied = funnelData.reduce((sum, d) => sum + d.count, 0);
+    const RESPONSE_STATUSES = ['INTERVIEW', 'OFFER', 'ACCEPTED'];
+    const responded = funnelData
+        .filter(d => RESPONSE_STATUSES.includes(d.status))
+        .reduce((sum, d) => sum + d.count, 0);
+    const conversionRate = totalApplied > 0 ? parseFloat(((responded / totalApplied) * 100).toFixed(1)) : 0;
+
+    // 4. Conversion rate over time (rolling 7-day average)
+    // Get all status history entries within range, grouped by day
+    const statusChanges = await db.execute<{ date: string; status: string }>(sql`
+        SELECT TO_CHAR(sh."changedAt", 'YYYY-MM-DD') as date, sh."status"
+        FROM "StatusHistory" sh
+        INNER JOIN "JobApplication" ja ON sh."jobId" = ja."id"
+        WHERE ja."userId" = ${userId} AND sh."changedAt" >= ${startDateISO}
+        ORDER BY date ASC
+    `);
+
+    // Build daily conversion: for each day, calculate cumulative responded/total
+    const allApps = await db.execute<{ date: string; count: string }>(sql`
+        SELECT TO_CHAR("applicationDate", 'YYYY-MM-DD') as date, COUNT(*) as count
+        FROM "JobApplication"
+        WHERE "userId" = ${userId} AND "applicationDate" >= ${startDateISO}
+        GROUP BY date
+        ORDER BY date ASC
+    `);
+
+    // Create a map of daily new applications and daily new responses
+    const dayMap = new Map<string, { apps: number; responses: number }>();
+    for (let d = new Date(startDate); d <= new Date(); d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().split('T')[0];
+        dayMap.set(key, { apps: 0, responses: 0 });
+    }
+
+    (allApps || []).forEach(row => {
+        const entry = dayMap.get(row.date);
+        if (entry) entry.apps = Number(row.count);
+    });
+
+    (statusChanges || []).forEach(row => {
+        if (RESPONSE_STATUSES.includes(row.status)) {
+            const entry = dayMap.get(row.date);
+            if (entry) entry.responses++;
+        }
+    });
+
+    // Rolling 7-day average
+    const sortedDays = Array.from(dayMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const conversionOverTime: { date: string; rate: number }[] = [];
+
+    for (let i = 0; i < sortedDays.length; i++) {
+        const windowStart = Math.max(0, i - 6);
+        let windowApps = 0;
+        let windowResponses = 0;
+        for (let j = windowStart; j <= i; j++) {
+            windowApps += sortedDays[j][1].apps;
+            windowResponses += sortedDays[j][1].responses;
+        }
+        const rate = windowApps > 0 ? parseFloat(((windowResponses / windowApps) * 100).toFixed(1)) : 0;
+        conversionOverTime.push({ date: sortedDays[i][0], rate });
+    }
+
+    // 5. Response rate by source (platform)
+    const responseBySourceResult = await db.execute<{
+        platform_id: string;
+        platform_name: string;
+        total: string;
+        responded: string;
+    }>(sql`
+        SELECT
+            jp."id" as platform_id,
+            jp."name" as platform_name,
+            COUNT(*) as total,
+            SUM(CASE WHEN ja."status" IN ('INTERVIEW', 'OFFER', 'ACCEPTED') THEN 1 ELSE 0 END) as responded
+        FROM "JobApplication" ja
+        INNER JOIN "JobPlatform" jp ON ja."platformId" = jp."id"
+        WHERE ja."userId" = ${userId}
+        GROUP BY jp."id", jp."name"
+        ORDER BY total DESC
+    `);
+
+    const responseBySource = (responseBySourceResult || []).map(row => ({
+        platform: row.platform_name,
+        total: Number(row.total),
+        responded: Number(row.responded),
+        rate: Number(row.total) > 0
+            ? parseFloat(((Number(row.responded) / Number(row.total)) * 100).toFixed(1))
+            : 0,
+    }));
+
+    return {
+        applicationsPerDay: dailyData,
+        totalInRange,
+        avgPerDay,
+        funnelData,
+        conversionRate,
+        respondedCount: responded,
+        totalCount: totalApplied,
+        conversionOverTime,
+        responseBySource,
     };
 };

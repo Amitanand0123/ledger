@@ -9,6 +9,7 @@ import {
     useScoreResumeMutation,
     useRebuildResumeStandaloneMutation,
 } from '@/lib/redux/slices/resumeToolsApiSlice';
+import { useUpdateJobMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import {
@@ -26,13 +27,15 @@ interface Props {
     wizardData: WizardData;
     onBack: () => void;
     onReset: () => void;
+    sourceJobId?: string | null;
 }
 
-export function ResultsStep({ wizardData, onBack, onReset }: Props) {
+export function ResultsStep({ wizardData, onBack, onReset, sourceJobId }: Props) {
     const { data: session } = useSession();
     const [scoreResume, { data: scoreData, isLoading: isScoring }] = useScoreResumeMutation();
     const [rebuildResume, { data: rebuildData, isLoading: isRebuilding }] =
         useRebuildResumeStandaloneMutation();
+    const [updateJob] = useUpdateJobMutation();
     const [activeTab, setActiveTab] = useState('score');
 
     const handleScore = () => {
@@ -40,11 +43,20 @@ export function ResultsStep({ wizardData, onBack, onReset }: Props) {
             scoreResume({
                 resumeId: wizardData.selectedResumeId,
                 jobDescription: wizardData.jobDescription,
-            }).unwrap(),
+            }).unwrap().then((result) => {
+                if (sourceJobId && result.match_score != null) {
+                    updateJob({
+                        id: sourceJobId,
+                        aiScore: result.match_score,
+                        aiFitAssessment: result.suggestions,
+                    }).catch(() => {});
+                }
+                return result;
+            }),
             {
                 loading: 'Analyzing your resume against the job description...',
                 success: 'Resume score ready!',
-                error: (err) => err.data?.message || 'Failed to score resume.',
+                error: (err: any) => err.data?.message || 'Failed to score resume.',
             },
         );
     };

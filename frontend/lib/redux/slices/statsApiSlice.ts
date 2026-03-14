@@ -20,7 +20,12 @@ export const statsApiSlice = createApi({
       transformResponse: (response: { success: boolean; data: any }) => response.data,
       providesTags: ['Stats'],
     }),
+    getOverviewStats: builder.query<any, number>({
+      query: (days) => `users/stats/overview?days=${days}`,
+      transformResponse: (response: { success: boolean; data: any }) => response.data,
+      providesTags: ['Stats'],
+    }),
   }),
 });
 
-export const { useGetStatsQuery } = statsApiSlice; 
+export const { useGetStatsQuery, useGetOverviewStatsQuery } = statsApiSlice;
