@@ -21,20 +21,24 @@ export const createDocumentRecord = async (
     return document;
 };
 
-export const getDocumentsForUser = async (userId: string, type?: DocType) => {
+export const getDocumentsForUser = async (userId: string, type?: DocType, page = 1, limit = 50) => {
     if (type) {
         return db
             .select()
             .from(documents)
             .where(and(eq(documents.userId, userId), eq(documents.type, type)))
-            .orderBy(desc(documents.createdAt));
+            .orderBy(desc(documents.createdAt))
+            .limit(limit)
+            .offset((page - 1) * limit);
     }
 
     return db
         .select()
         .from(documents)
         .where(eq(documents.userId, userId))
-        .orderBy(desc(documents.createdAt));
+        .orderBy(desc(documents.createdAt))
+        .limit(limit)
+        .offset((page - 1) * limit);
 };
 
 export const deleteDocumentRecord = async (docId: string, userId: string) => {

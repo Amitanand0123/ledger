@@ -112,7 +112,7 @@ export function JobFormModal() {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 py-4 max-h-[calc(90vh-180px)] overflow-y-auto pr-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2"><Label htmlFor="company">Company</Label><Input id="company" {...register('company')} />{errors.company && <p className="text-sm text-destructive">{errors.company.message}</p>}</div>
+                <div className="space-y-2"><Label htmlFor="company">Company</Label><Input id="company" autoFocus {...register('company')} />{errors.company && <p className="text-sm text-destructive">{errors.company.message}</p>}</div>
                 <div className="space-y-2"><Label htmlFor="position">Position / Role</Label><Input id="position" {...register('position')} />{errors.position && <p className="text-sm text-destructive">{errors.position.message}</p>}</div>
             </div>
 

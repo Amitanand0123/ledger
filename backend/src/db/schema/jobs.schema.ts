@@ -47,6 +47,7 @@ export const jobApplications = pgTable('JobApplication', {
   userIdStatusIdx: index('JobApplication_userId_status_idx').on(table.userId, table.status),
   deadlineIdx: index('JobApplication_deadline_idx').on(table.deadline),
   applicationDateIdx: index('JobApplication_applicationDate_idx').on(table.applicationDate),
+  platformIdIdx: index('JobApplication_platformId_idx').on(table.platformId),
 }));
 
 // StatusHistory table

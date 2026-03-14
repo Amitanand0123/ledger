@@ -19,6 +19,7 @@ export function NavLink({ href, children, collapsed, tooltip }: NavLinkProps) {
         <Link
             href={href}
             title={collapsed ? tooltip : undefined}
+            aria-label={collapsed ? tooltip : undefined}
             className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 whitespace-nowrap text-content-secondary transition-all hover:text-primary-600 dark:hover:text-primary-500',
                 isActive && 'text-primary-600 dark:text-primary-500 bg-primary-50 dark:bg-muted font-semibold',

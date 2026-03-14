@@ -1,10 +1,10 @@
-# frontend/.dockerignore
-
-# Ignore node_modules
 node_modules
-
-# Ignore Next.js build cache and output
+.git
+.env
+.env.*
+*.md
+dist
 .next
-
-# Ignore local environment files
-.env.local
+__pycache__
+.ruff_cache
+.vscode

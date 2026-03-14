@@ -54,6 +54,7 @@ export const jobsApiSlice = createApi({
         result
           ? [ ...result.data.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'LIST' }]
           : [{ type: 'Job', id: 'LIST' }],
+      keepUnusedDataFor: 60,
     }),
 
     addJob: builder.mutation<JobApplication, Partial<JobApplication>>({
@@ -90,6 +91,7 @@ export const jobsApiSlice = createApi({
       query: () => 'jobs/status-counts',
       transformResponse: (response: { success: boolean; data: Record<string, number> }) => response.data,
       providesTags: [{ type: 'Job', id: 'LIST' }],
+      keepUnusedDataFor: 60,
     }),
     bulkUpdateStatus: builder.mutation<any, { ids: string[]; status: string }>({
       query: (body) => ({ url: 'jobs/bulk-status', method: 'PATCH', body }),

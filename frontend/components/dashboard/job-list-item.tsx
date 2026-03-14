@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { JobApplication } from '@/lib/types';
 import { MapPin, Calendar } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
     WITHDRAWN: 'bg-gray-500',
 };
 
-export function JobListItem({ job, isActive, isChecked, onSelect, onCheckChange }: JobListItemProps) {
+export const JobListItem = React.memo(function JobListItem({ job, isActive, isChecked, onSelect, onCheckChange }: JobListItemProps) {
     const scoreColor = job.aiScore != null
         ? job.aiScore >= 75 ? 'text-emerald-500'
             : job.aiScore >= 50 ? 'text-amber-500'
@@ -72,4 +73,4 @@ export function JobListItem({ job, isActive, isChecked, onSelect, onCheckChange 
             )}
         </div>
     );
-}
+});

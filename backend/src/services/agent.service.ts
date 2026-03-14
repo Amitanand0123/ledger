@@ -9,7 +9,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import ApiError from '../utils/ApiError.js';
 import { extractTextFromPdf } from '../utils/pdf.utils.js';
 
-const AI_FETCH_TIMEOUT_MS = 90_000; // 90 seconds
+const AI_FETCH_TIMEOUT_MS = 45_000; // 45 seconds
 
 export const invokeAgent = async (userId: string, resumeId: string, jobId: string, userGoal: string) => {
     if (!config.aiServiceUrl || !config.aiServiceApiKey) {

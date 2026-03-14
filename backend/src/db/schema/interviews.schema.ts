@@ -19,6 +19,7 @@ export const interviews = pgTable('Interview', {
 }, (table) => ({
   jobIdIdx: index('Interview_jobId_idx').on(table.jobId),
   scheduledAtIdx: index('Interview_scheduledAt_idx').on(table.scheduledAt),
+  completedIdx: index('Interview_completed_idx').on(table.completed),
 }));
 
 // Relations for Interview

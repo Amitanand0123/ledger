@@ -32,7 +32,7 @@ export const createNote = async (
     return note;
 };
 
-export const getNotesForJob = async (jobId: string, userId: string) => {
+export const getNotesForJob = async (jobId: string, userId: string, page = 1, limit = 50) => {
     // Verify job belongs to user
     const [job] = await db
         .select()
@@ -48,10 +48,12 @@ export const getNotesForJob = async (jobId: string, userId: string) => {
         .select()
         .from(notes)
         .where(eq(notes.jobId, jobId))
-        .orderBy(desc(notes.isPinned), desc(notes.createdAt));
+        .orderBy(desc(notes.isPinned), desc(notes.createdAt))
+        .limit(limit)
+        .offset((page - 1) * limit);
 };
 
-export const getAllNotes = async (userId: string) => {
+export const getAllNotes = async (userId: string, page = 1, limit = 50) => {
     return db.query.notes.findMany({
         where: eq(notes.userId, userId),
         with: {
@@ -64,6 +66,8 @@ export const getAllNotes = async (userId: string) => {
             },
         },
         orderBy: [desc(notes.isPinned), desc(notes.createdAt)],
+        limit,
+        offset: (page - 1) * limit,
     });
 };
 

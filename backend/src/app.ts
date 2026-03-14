@@ -1,4 +1,5 @@
 import express, { Express, Request, Response, RequestHandler } from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -11,6 +12,7 @@ const app: Express = express();
 
 
 app.use(helmet());
+app.use(compression());
 
 const allowedOrigins = config.clientUrl
     .split(',')
@@ -50,8 +52,8 @@ app.use(
     })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 app.set('trust proxy', 1);
 const apiLimiter = rateLimit({
@@ -64,6 +66,12 @@ app.use('/api/', apiLimiter);
 
 // Health check endpoints (before rate limiting)
 app.use('/', healthRoutes);
+
+// Cache static data
+app.use('/api/v1/platforms', (req: Request, res: Response, next: any) => {
+    if (req.method === 'GET') res.set('Cache-Control', 'public, max-age=300');
+    next();
+});
 
 app.use('/api/v1', apiRoutes);
 

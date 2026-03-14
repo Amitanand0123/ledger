@@ -1,10 +1,10 @@
-# backend/.dockerignore
-
-# Ignore node_modules, as they will be installed inside the container
 node_modules
-
-# Ignore local environment files, the .env from the parent will be used by docker-compose
+.git
 .env
-
-# Ignore build output
+.env.*
+*.md
 dist
+.next
+__pycache__
+.ruff_cache
+.vscode

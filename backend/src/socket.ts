@@ -3,6 +3,10 @@ import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
 import config from './config/index.js';
 import { logger } from './utils/logger.js';
+
+interface AuthenticatedSocket extends Socket {
+    userId: string;
+}
 export function initializeSocket(httpServer: HttpServer): Server {
     if (!config.jwtSecret) {
         throw new Error('JWT_SECRET is not configured. Please check environment variables.');
@@ -25,13 +29,13 @@ export function initializeSocket(httpServer: HttpServer): Server {
                 logger.warn(`Socket authentication failed: ${err.message}`);
                 return next(new Error('Authentication error: Invalid token.'));
             }
-            (socket as any).userId = decoded.id;
+            (socket as AuthenticatedSocket).userId = decoded.id;
             next();
         });
     });
 
     io.on('connection', (socket: Socket) => {
-        const userId = (socket as any).userId;
+        const userId = (socket as AuthenticatedSocket).userId;
 
         socket.join(userId);
     });

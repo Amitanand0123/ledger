@@ -1,21 +1,10 @@
-venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env
-
-# Ignore IDE and OS files
-.vscode
-.idea
-.DS_Store
-
-# Ignore Git files
+node_modules
 .git
-.gitignore
-
-# Ignore build artifacts
-*.egg-info
+.env
+.env.*
+*.md
 dist
-build
+.next
+__pycache__
+.ruff_cache
+.vscode

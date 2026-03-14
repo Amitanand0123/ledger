@@ -18,20 +18,13 @@ export const useSocket = (): Socket | null => {
                 reconnectionAttempts: 5,
             });
 
-            newSocket.on('connect', () => {
-                console.log('Socket.IO Client Connected:', newSocket.id);
-            });
-
-            newSocket.on('connect_error', (err) => {
-                console.error('Socket.IO Connection Error:', err.message);
-            });
-
-            newSocket.on('disconnect', () => {
-                console.log('Socket.IO Client Disconnected.');
-            });
+            if (process.env.NODE_ENV === 'development') {
+                newSocket.on('connect', () => console.log('Socket.IO Connected:', newSocket.id));
+                newSocket.on('connect_error', (err) => console.error('Socket.IO Error:', err.message));
+                newSocket.on('disconnect', () => console.log('Socket.IO Disconnected.'));
+            }
             setSocket(newSocket);
             return () => {
-                console.log('Disconnecting socket...');
                 newSocket.disconnect();
             };
         }

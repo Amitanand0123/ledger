@@ -33,4 +33,5 @@ COPY --from=builder /app/frontend/public ./frontend/public
 
 EXPOSE 3021
 # The standalone server.js is inside the frontend directory
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s CMD node -e "fetch('http://localhost:3021').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
 CMD ["node", "frontend/server.js"]

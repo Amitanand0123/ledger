@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useGetDocumentsQuery } from '@/lib/redux/slices/documentApiSlice';
 import { UserDocument } from '@/lib/types';
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { differenceInDays } from 'date-fns';
@@ -79,7 +79,7 @@ function DocumentSelector({ job, type }: { job: JobApplication, type: 'RESUME' |
     );
 }
 
-export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionChange }: JobCardProps) {
+export const JobCard = React.memo(function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionChange }: JobCardProps) {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { data: session } = useSession();
@@ -106,11 +106,11 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
 
     const style = { transition, transform: CSS.Transform.toString(transform) };
 
-    const handleEdit = () => { dispatch(setEditingJob(job)); dispatch(openJobFormModal()); };
-    const handleViewDetails = () => { router.push(`/jobs/${job.id}`); };
-    const handleOpenDescriptionModal = () => dispatch(openDescriptionModal(job));
+    const handleEdit = useCallback(() => { dispatch(setEditingJob(job)); dispatch(openJobFormModal()); }, [dispatch, job]);
+    const handleViewDetails = useCallback(() => { router.push(`/jobs/${job.id}`); }, [router, job.id]);
+    const handleOpenDescriptionModal = useCallback(() => dispatch(openDescriptionModal(job)), [dispatch, job]);
 
-    const handleDelete = () => {
+    const handleDelete = useCallback(() => {
         toast.warning(`Delete application for ${job.position}?`, {
             action: { label: 'Delete', onClick: () => {
                 if (isGuest) {
@@ -123,9 +123,9 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
                 }
             }},
         });
-    };
+    }, [dispatch, isGuest, job.id, job.position, deleteJobApi]);
 
-    const handleStatusChange = (newStatus: string) => {
+    const handleStatusChange = useCallback((newStatus: string) => {
         if (newStatus === job.status) return;
         if (isGuest) {
             dispatch(updateGuestJob({ id: job.id, status: newStatus }));
@@ -139,7 +139,7 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
                 loading: 'Updating status...', success: 'Status updated', error: 'Failed to update.',
             });
         }
-    };
+    }, [dispatch, isGuest, job, updateJobApi]);
     
     if (isDragging) {
         return <div ref={setNodeRef} style={style} className="bg-card p-4 rounded-lg border-2 border-primary opacity-50 h-[60px] w-full" />;
@@ -191,7 +191,7 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
 
                 <div className="flex justify-end pr-2">
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal size={18} /></Button></DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Job actions"><MoreHorizontal size={18} /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={handleViewDetails}><Briefcase className="mr-2 h-4 w-4" /> View Details</DropdownMenuItem>
                             <DropdownMenuItem onClick={handleEdit}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
@@ -203,4 +203,4 @@ export function JobCard({ job, isOverlay, colorClass, isSelected, onSelectionCha
             </div>
         </div>
     );
-}
+});

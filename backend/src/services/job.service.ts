@@ -16,7 +16,7 @@ import config from '../config/index.js';
 import { logger } from '@/utils/logger.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '@/utils/ApiError.js';
 
-const AI_FETCH_TIMEOUT_MS = 90_000; // 90 seconds
+const AI_FETCH_TIMEOUT_MS = 45_000; // 45 seconds
 
 const onJobDataChange = (userId: string) => {
     const io = app.get('io');
@@ -311,7 +311,7 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
     if (!job.description) throw new ValidationError('Job has no description');
 
     const [resumeDoc] = await db
-        .select()
+        .select({ id: documents.id, fileKey: documents.fileKey })
         .from(documents)
         .where(
             and(eq(documents.id, resumeId), eq(documents.userId, userId), eq(documents.type, 'RESUME'))
@@ -377,7 +377,7 @@ export const analyzeMatch = async (userId: string, jobId: string, resumeId: stri
 
 export const scoreResumeStandalone = async (userId: string, resumeId: string, jobDescription: string) => {
     const [resumeDoc] = await db
-        .select()
+        .select({ id: documents.id, fileKey: documents.fileKey })
         .from(documents)
         .where(
             and(eq(documents.id, resumeId), eq(documents.userId, userId), eq(documents.type, 'RESUME'))

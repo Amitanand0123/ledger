@@ -59,12 +59,12 @@ class SimilarJob(BaseModel):
 
 
 class AnalyzeResumeRequest(BaseModel):
-    resume_text: str
+    resume_text: str = Field(..., max_length=100000)
 
 
 class MatchResumeRequest(BaseModel):
     resume_analysis: dict
-    job_description_text: str
+    job_description_text: str = Field(..., max_length=50000)
 
 
 class MatchResponse(BaseModel):
@@ -79,19 +79,19 @@ class MatchResponse(BaseModel):
 
 
 class RebuildLatexRequest(BaseModel):
-    latex_source: str
-    job_description: str
+    latex_source: str = Field(..., max_length=200000)
+    job_description: str = Field(..., max_length=50000)
 
 
 class CompileLatexRequest(BaseModel):
-    latex_source: str
+    latex_source: str = Field(..., max_length=200000)
 
 
 class AgentRequest(BaseModel):
     user_id: str
-    resume_text: str
-    job_description: str
-    user_goal: str
+    resume_text: str = Field(..., max_length=100000)
+    job_description: str = Field(..., max_length=50000)
+    user_goal: str = Field(..., max_length=2000)
 
 
 # --- Gemini Helper ---

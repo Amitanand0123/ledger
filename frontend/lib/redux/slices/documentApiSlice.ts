@@ -31,6 +31,7 @@ export const documentApiSlice = createApi({
                 result
                     ? [...result.map(({ id }) => ({ type: 'Document' as const, id })), { type: 'Document', id: 'LIST' }]
                     : [{ type: 'Document', id: 'LIST' }],
+            keepUnusedDataFor: 60,
         }),
         deleteDocument: builder.mutation<{ id: string }, string>({
             query: (id) => ({

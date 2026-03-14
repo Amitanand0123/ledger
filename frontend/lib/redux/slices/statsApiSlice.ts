@@ -18,12 +18,14 @@ export const statsApiSlice = createApi({
     getStats: builder.query<any, void>({
       query: () => 'users/stats',
       transformResponse: (response: { success: boolean; data: any }) => response.data,
-      providesTags: ['Stats'],
+      providesTags: [{ type: 'Stats', id: 'summary' }],
+      keepUnusedDataFor: 60,
     }),
     getOverviewStats: builder.query<any, number>({
       query: (days) => `users/stats/overview?days=${days}`,
       transformResponse: (response: { success: boolean; data: any }) => response.data,
-      providesTags: ['Stats'],
+      providesTags: (_result, _error, days) => [{ type: 'Stats', id: `overview-${days}` }],
+      keepUnusedDataFor: 60,
     }),
   }),
 });

@@ -7,6 +7,7 @@ import {
     Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip,
     XAxis, YAxis, LineChart, Line,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 import { Loader2, Activity, Target, TrendingUp, TrendingDown } from 'lucide-react';
 import { useGetOverviewStatsQuery } from '@/lib/redux/slices/statsApiSlice';
 
@@ -43,7 +44,7 @@ const STATUS_LABELS: Record<string, string> = {
     WITHDRAWN: 'Withdrawn',
 };
 
-const CustomBarTooltip = ({ active, payload, label }: any) => {
+const CustomBarTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg">
@@ -53,7 +54,7 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
     );
 };
 
-const CustomLineTooltip = ({ active, payload, label }: any) => {
+const CustomLineTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg">

@@ -91,3 +91,18 @@ export const {
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
+
+// --- Memoized Selectors ---
+import { createSelector } from '@reduxjs/toolkit';
+import type { RootState } from '../store';
+
+const selectUIState = (state: RootState) => state.ui;
+export const selectIsJobFormModalOpen = createSelector(selectUIState, (ui) => ui.isJobFormModalOpen);
+export const selectIsInterviewModalOpen = createSelector(selectUIState, (ui) => ui.isInterviewModalOpen);
+export const selectIsOfferModalOpen = createSelector(selectUIState, (ui) => ui.isOfferModalOpen);
+export const selectIsDescriptionModalOpen = createSelector(selectUIState, (ui) => ui.isDescriptionModalOpen);
+export const selectIsCustomFieldModalOpen = createSelector(selectUIState, (ui) => ui.isCustomFieldModalOpen);
+export const selectEditingJob = createSelector(selectUIState, (ui) => ui.editingJob);
+export const selectJobForDescriptionModal = createSelector(selectUIState, (ui) => ui.jobForDescriptionModal);
+export const selectJobForInterviewModal = createSelector(selectUIState, (ui) => ui.jobForInterviewModal);
+export const selectJobForOfferModal = createSelector(selectUIState, (ui) => ui.jobForOfferModal);

@@ -78,3 +78,17 @@ export const {
 } = filterSlice.actions;
 
 export default filterSlice.reducer;
+
+// --- Memoized Selectors ---
+import { createSelector } from '@reduxjs/toolkit';
+import type { RootState } from '../store';
+
+const selectFilterState = (state: RootState) => state.filters;
+export const selectSearch = createSelector(selectFilterState, (f) => f.search);
+export const selectStatus = createSelector(selectFilterState, (f) => f.status);
+export const selectLocation = createSelector(selectFilterState, (f) => f.location);
+export const selectDateRange = createSelector(selectFilterState, (f) => f.dateRange);
+export const selectSalaryRange = createSelector(selectFilterState, (f) => ({ min: f.salaryMin, max: f.salaryMax }));
+export const selectPage = createSelector(selectFilterState, (f) => f.page);
+export const selectLimit = createSelector(selectFilterState, (f) => f.limit);
+export const selectFilters = selectFilterState;

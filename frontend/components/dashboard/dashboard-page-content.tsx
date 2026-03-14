@@ -1,6 +1,6 @@
 'use client';
 
-import { JobFormModal } from '@/components/dashboard/job-form-modal';
+import dynamic from 'next/dynamic';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { jobsApiSlice, useGetJobsQuery, useGetStatusCountsQuery, useBulkDeleteJobsMutation, useBulkUpdateStatusMutation } from '@/lib/redux/slices/jobsApiSlice';
 import { setPage, setSearch, setStatus, setDateRange, setSalaryRange, clearFilters } from '@/lib/redux/slices/filterSlice';
@@ -9,8 +9,6 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { EmptyState } from './empty-state';
 import { Loader2, Search, X, Trash2, ChevronLeft, ChevronRight, SlidersHorizontal, XCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
-import { InterviewScheduleModal } from './interview-schedule-modal';
-import { OfferDetailsModal } from './offer-details-modal';
 import { useSocket } from '@/lib/hooks/useSocket';
 import { toast } from 'sonner';
 import { OnboardingModal } from '../onboarding/onboarding-modal';
@@ -28,6 +26,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { DateRange } from 'react-day-picker';
 import { formatDate } from '@/lib/utils';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+
+const JobFormModal = dynamic(() => import('./job-form-modal').then(m => ({ default: m.JobFormModal })), { ssr: false });
+const InterviewScheduleModal = dynamic(() => import('./interview-schedule-modal').then(m => ({ default: m.InterviewScheduleModal })), { ssr: false });
+const OfferDetailsModal = dynamic(() => import('./offer-details-modal').then(m => ({ default: m.OfferDetailsModal })), { ssr: false });
 
 const STATUS_TABS = [
     { label: 'All', value: 'ALL' },
@@ -263,6 +265,8 @@ export function DashboardPageContent() {
                         size="sm"
                         className="h-9"
                         onClick={() => setShowFilters(!showFilters)}
+                        aria-label="Toggle filters"
+                        aria-expanded={showFilters}
                     >
                         <SlidersHorizontal className="h-4 w-4 mr-1" />
                         Filters

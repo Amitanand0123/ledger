@@ -95,6 +95,8 @@ export function AppSidebar({ mobile }: AppSidebarProps) {
                                 isCollapsed && 'mt-1',
                             )}
                             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                            aria-expanded={!isCollapsed}
                         >
                             {isCollapsed
                                 ? <ChevronRight className="h-4 w-4" />
@@ -132,6 +134,7 @@ export function AppSidebar({ mobile }: AppSidebarProps) {
                 <button
                     onClick={handleToggleTheme}
                     title={isCollapsed ? 'Toggle theme' : undefined}
+                    aria-label="Toggle theme"
                     className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2 text-content-secondary transition-all hover:text-primary-600 dark:hover:text-primary-500',
                         isCollapsed && 'justify-center px-0',
